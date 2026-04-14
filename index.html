@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>똥끼몽 키우기</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0a0a0f;
+      color: #fff;
+      font-family: 'Press Start 2P', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 12px 40px;
+      background-image:
+        linear-gradient(rgba(0,200,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,200,255,0.03) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+
+    h1 {
+      font-size: 14px;
+      color: #00c8ff;
+      text-shadow: 0 0 10px #00c8ff;
+      margin-bottom: 6px;
+      letter-spacing: 2px;
+    }
+
+    .stage-badge {
+      font-size: 9px;
+      color: #fffc6e;
+      text-shadow: 0 0 6px #fffc6e;
+      margin-bottom: 16px;
+    }
+
+    .game-container {
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* 캐릭터 패널 */
+    .char-panel {
+      background: #0f0f1a;
+      border: 2px solid #00c8ff;
+      border-radius: 4px;
+      padding: 16px;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      box-shadow: 0 0 20px rgba(0,200,255,0.15);
+    }
+
+    canvas#charCanvas {
+      image-rendering: pixelated;
+      width: 80px;
+      height: 96px;
+      flex-shrink: 0;
+    }
+
+    .char-info { flex: 1; }
+
+    .char-name {
+      font-size: 11px;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .char-status {
+      font-size: 8px;
+      color: #aaa;
+      margin-bottom: 10px;
+      line-height: 1.6;
+    }
+
+    /* 스탯 */
+    .stats { display: flex; flex-direction: column; gap: 5px; }
+    .stat-row { display: flex; align-items: center; gap: 6px; }
+    .stat-label { font-size: 7px; color: #aaa; width: 40px; flex-shrink: 0; }
+    .stat-bar {
+      flex: 1;
+      height: 8px;
+      background: #1a1a2e;
+      border: 1px solid #333;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .stat-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+    .stat-fill.hp   { background: linear-gradient(90deg, #ff4444, #ff6666); }
+    .stat-fill.skill { background: linear-gradient(90deg, #00c8ff, #44ddff); }
+    .stat-fill.fame  { background: linear-gradient(90deg, #fffc6e, #ffe44d); }
+    .stat-fill.fan   { background: linear-gradient(90deg, #ff2df3, #ff66f5); }
+    .stat-val { font-size: 7px; color: #fff; width: 24px; text-align: right; flex-shrink: 0; }
+
+    /* 돈 */
+    .money-row {
+      font-size: 9px;
+      color: #b8ff3c;
+      text-align: right;
+      text-shadow: 0 0 6px #b8ff3c;
+    }
+
+    /* 배경 패널 */
+    .bg-panel {
+      background: #0f0f1a;
+      border: 2px solid #333;
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+    canvas#bgCanvas {
+      display: block;
+      width: 100%;
+      image-rendering: pixelated;
+    }
+
+    /* 메시지 박스 */
+    .msg-box {
+      background: #0f0f1a;
+      border: 2px solid #00c8ff;
+      border-radius: 4px;
+      padding: 10px 12px;
+      font-size: 8px;
+      color: #ccc;
+      line-height: 1.8;
+      min-height: 52px;
+      box-shadow: 0 0 10px rgba(0,200,255,0.1);
+    }
+    .msg-box .highlight { color: #00c8ff; }
+    .msg-box .warning { color: #ff4444; }
+    .msg-box .success { color: #b8ff3c; }
+
+    /* 버튼 */
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .action-btn {
+      background: #0f0f1a;
+      border: 2px solid #444;
+      border-radius: 4px;
+      color: #ccc;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 8px;
+      padding: 10px 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+      line-height: 1.6;
+    }
+    .action-btn:hover { border-color: #00c8ff; color: #00c8ff; box-shadow: 0 0 8px rgba(0,200,255,0.3); }
+    .action-btn:active { transform: scale(0.97); }
+    .action-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .action-btn.special { border-color: #fffc6e; color: #fffc6e; }
+    .action-btn.special:hover { box-shadow: 0 0 8px rgba(255,252,110,0.3); }
+    .action-btn.danger { border-color: #ff4444; color: #ff4444; }
+
+    /* 진급 버튼 */
+    .promote-btn {
+      width: 100%;
+      background: linear-gradient(90deg, #00c8ff22, #ff2df322);
+      border: 2px solid #00c8ff;
+      border-radius: 4px;
+      color: #00c8ff;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 9px;
+      padding: 12px;
+      cursor: pointer;
+      text-shadow: 0 0 6px #00c8ff;
+      box-shadow: 0 0 12px rgba(0,200,255,0.2);
+      display: none;
+    }
+    .promote-btn.visible { display: block; }
+    .promote-btn:hover { background: linear-gradient(90deg, #00c8ff44, #ff2df344); }
+
+    /* 게임오버 */
+    .gameover-panel {
+      display: none;
+      background: #0f0f1a;
+      border: 2px solid #ff4444;
+      border-radius: 4px;
+      padding: 20px;
+      text-align: center;
+      gap: 12px;
+      flex-direction: column;
+      box-shadow: 0 0 20px rgba(255,68,68,0.2);
+    }
+    .gameover-panel.visible { display: flex; }
+    .gameover-title { font-size: 13px; color: #ff4444; text-shadow: 0 0 10px #ff4444; }
+    .gameover-sub { font-size: 8px; color: #aaa; line-height: 1.8; }
+    .restart-btn {
+      background: #ff4444;
+      border: none;
+      border-radius: 4px;
+      color: #fff;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 9px;
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    /* 엔딩 */
+    .ending-panel {
+      display: none;
+      background: #0f0f1a;
+      border: 2px solid #fffc6e;
+      border-radius: 4px;
+      padding: 20px;
+      text-align: center;
+      gap: 12px;
+      flex-direction: column;
+      box-shadow: 0 0 20px rgba(255,252,110,0.2);
+    }
+    .ending-panel.visible { display: flex; }
+    .ending-title { font-size: 11px; color: #fffc6e; text-shadow: 0 0 10px #fffc6e; line-height: 1.8; }
+    .ending-sub { font-size: 8px; color: #aaa; line-height: 1.8; }
+  </style>
+</head>
+<body>
+  <h1>똥끼몽 키우기</h1>
+  <div class="stage-badge" id="stageBadge">📚 STAGE 1 : 학생</div>
+
+  <div class="game-container">
+    <!-- 배경 -->
+    <div class="bg-panel">
+      <canvas id="bgCanvas" width="420" height="120"></canvas>
+    </div>
+
+    <!-- 캐릭터 + 스탯 -->
+    <div class="char-panel">
+      <canvas id="charCanvas" width="20" height="24"></canvas>
+      <div class="char-info">
+        <div class="char-name">메이슨홈</div>
+        <div class="char-status" id="charStatus">방구석에서 혼자 랩 연습 중...</div>
+        <div class="stats">
+          <div class="stat-row">
+            <div class="stat-label">❤️ 체력</div>
+            <div class="stat-bar"><div class="stat-fill hp" id="bar-hp" style="width:100%"></div></div>
+            <div class="stat-val" id="val-hp">100</div>
+          </div>
+          <div class="stat-row">
+            <div class="stat-label">🎤 실력</div>
+            <div class="stat-bar"><div class="stat-fill skill" id="bar-skill" style="width:0%"></div></div>
+            <div class="stat-val" id="val-skill">0</div>
+          </div>
+          <div class="stat-row">
+            <div class="stat-label">🌟 명성</div>
+            <div class="stat-bar"><div class="stat-fill fame" id="bar-fame" style="width:0%"></div></div>
+            <div class="stat-val" id="val-fame">0</div>
+          </div>
+          <div class="stat-row">
+            <div class="stat-label">👥 팬</div>
+            <div class="stat-bar"><div class="stat-fill fan" id="bar-fan" style="width:0%"></div></div>
+            <div class="stat-val" id="val-fan">0</div>
+          </div>
+        </div>
+        <div class="money-row" id="moneyRow">💰 0원</div>
+      </div>
+    </div>
+
+    <!-- 메시지 -->
+    <div class="msg-box" id="msgBox">
+      <span class="highlight">[ 메이슨홈의 이야기 시작 ]</span><br>
+      넌 지금 평범한 학생이야.<br>
+      하지만 랩에 대한 꿈이 있어...
+    </div>
+
+    <!-- 게임 버튼 -->
+    <div class="actions" id="actionArea"></div>
+
+    <!-- 진급 버튼 -->
+    <button class="promote-btn" id="promoteBtn" onclick="promote()">
+      ▶ 다음 단계로 진급하기!
+    </button>
+
+    <!-- 게임오버 -->
+    <div class="gameover-panel" id="gameoverPanel">
+      <div class="gameover-title">💀 GAME OVER</div>
+      <div class="gameover-sub" id="gameoverMsg"></div>
+      <button class="restart-btn" onclick="restartGame()">다시 시작하기</button>
+    </div>
+
+    <!-- 엔딩 -->
+    <div class="ending-panel" id="endingPanel">
+      <div class="ending-title" id="endingTitle"></div>
+      <div class="ending-sub" id="endingSub"></div>
+    </div>
+  </div>
+
+  <script>
+    // =====================
+    // 게임 상태
+    // =====================
+    let state = {};
+
+    const STAGES = [
+      { id: 0, name: '학생',       badge: '📚 STAGE 1 : 학생',       req: { skill: 30 } },
+      { id: 1, name: '언더 래퍼',  badge: '🎤 STAGE 2 : 언더 래퍼',  req: { skill: 60, fame: 30 } },
+      { id: 2, name: '쇼미더머니', badge: '🏆 STAGE 3 : 쇼미더머니', req: { skill: 85, fame: 60 } },
+      { id: 3, name: '메이저',     badge: '🎵 STAGE 4 : 메이저',     req: { skill: 95, fame: 80, fan: 60 } },
+      { id: 4, name: '레전드',     badge: '👑 STAGE 5 : 레전드',     req: null }
+    ];
+
+    const ACTIONS = [
+      // 학생
+      [
+        { label: '📖\n공부하기',    fn: 'study',    cost: { hp: -5 },            gain: { skill: 3 } },
+        { label: '🎤\n랩 연습',    fn: 'rapPrac',  cost: { hp: -8 },            gain: { skill: 6 } },
+        { label: '😴\n잠자기',     fn: 'sleep',    cost: {},                    gain: { hp: 30 } },
+        { label: '🍜\n밥 먹기',    fn: 'eat',      cost: { money: -500 },       gain: { hp: 15 } },
+      ],
+      // 언더
+      [
+        { label: '🎤\n랩 연습',    fn: 'rapPrac',  cost: { hp: -8 },            gain: { skill: 5 } },
+        { label: '🎵\n곡 작업',    fn: 'makeSong', cost: { hp: -12 },           gain: { skill: 4, fame: 5 } },
+        { label: '🌃\n클럽 공연',  fn: 'clubShow', cost: { hp: -15 },           gain: { fame: 8, fan: 5, money: 3000 } },
+        { label: '😴\n잠자기',     fn: 'sleep',    cost: {},                    gain: { hp: 30 } },
+      ],
+      // 쇼미
+      [
+        { label: '🔥\n예선 준비',  fn: 'showmiPre', cost: { hp: -15 },          gain: { skill: 7, fame: 5 } },
+        { label: '🎤\n본선 랩',    fn: 'showmiMain',cost: { hp: -20 },          gain: { skill: 5, fame: 12, fan: 10, money: 10000 }, special: true },
+        { label: '😴\n잠자기',     fn: 'sleep',     cost: {},                   gain: { hp: 30 } },
+        { label: '🍖\n고기 먹기',  fn: 'eatMeat',   cost: { money: -2000 },     gain: { hp: 25 } },
+      ],
+      // 메이저
+      [
+        { label: '💿\n앨범 작업',  fn: 'album',    cost: { hp: -18 },           gain: { skill: 3, fame: 10, money: 50000 } },
+        { label: '🎪\n전국 투어',  fn: 'tour',     cost: { hp: -20 },           gain: { fame: 8, fan: 20, money: 30000 } },
+        { label: '📺\n방송 출연',  fn: 'tv',       cost: { hp: -10 },           gain: { fame: 15, fan: 15 } },
+        { label: '😴\n잠자기',     fn: 'sleep',    cost: {},                    gain: { hp: 30 } },
+      ],
+      // 레전드
+      [
+        { label: '👶\n후배 양성',  fn: 'mentor',   cost: { hp: -10 },           gain: { fame: 5, money: 20000 } },
+        { label: '🤝\n콜라보',     fn: 'collab',   cost: { hp: -15 },           gain: { skill: 2, fame: 10, fan: 10, money: 40000 } },
+        { label: '🌍\n월드투어',   fn: 'worldtour',cost: { hp: -25 },           gain: { fame: 20, fan: 30, money: 100000 } },
+        { label: '😴\n잠자기',     fn: 'sleep',    cost: {},                    gain: { hp: 30 } },
+      ],
+    ];
+
+    const MESSAGES = {
+      study:      ['📖 열심히 공부했다. 근데 머릿속엔 온통 랩 가사...', '📖 수업 시간에 노트 대신 가사를 썼다.'],
+      rapPrac:    ['🎤 거울 보면서 연습했다. 점점 느낌이 온다!', '🎤 새벽 2시까지 연습... 실력이 오르는 게 느껴진다.'],
+      sleep:      ['😴 푹 잤다. 내일은 더 잘 할 수 있어.', '😴 꿈에서 쇼미 우승했다...'],
+      eat:        ['🍜 편의점 컵라면 먹었다. 500원짜리.', '🍜 밥 먹으니 기운이 난다.'],
+      makeSong:   ['🎵 새벽에 비트 찾다가 결국 곡 완성!', '🎵 오토튠 없이 날것 그대로. 이게 진짜다.'],
+      clubShow:   ['🌃 홍대 클럽 무대에 올랐다. 관중이 10명... 그래도 최선을 다했다!', '🌃 클럽 공연 끝. 한 명이 인스타에 올렸다. 팬이 생겼다!'],
+      showmiPre:  ['🔥 쇼미 예선 준비 중. 16마디를 천 번 연습했다.', '🔥 프리스타일 연습. 어떤 비트가 나와도 이제 OK.'],
+      showmiMain: ['🏆 본선 무대! 심사위원들이 고개를 끄덕인다!!', '🏆 관중들의 함성! 이게 내가 원하던 순간이야!'],
+      album:      ['💿 3개월 만에 앨범 완성. 내 이야기를 담았다.', '💿 타이틀곡이 차트에 진입했다!'],
+      tour:       ['🎪 부산, 대구, 서울... 전국을 돌았다.', '🎪 투어 마지막 날, 팬들이 떼창을 했다.'],
+      tv:         ['📺 음악 방송 출연! 긴장됐지만 해냈다.', '📺 라디오 인터뷰. 래퍼 인생 얘기를 했다.'],
+      mentor:     ['👶 후배들에게 랩을 가르쳤다. 뿌듯하다.', '👶 내가 걸어온 길을 후배에게 전해줬다.'],
+      collab:     ['🤝 유명 래퍼와 콜라보! 시너지가 폭발했다.', '🤝 피처링 곡이 대박났다.'],
+      worldtour:  ['🌍 해외 팬들도 내 랩을 알고 있었다...', '🌍 LA 공연장 매진. 한국 힙합의 위상을 높였다.'],
+      eatMeat:    ['🍖 삼겹살 먹었다. 체력이 팍 올랐다!'],
+    };
+
+    const GAMEOVER_MSGS = [
+      '체력이 0이 됐다...\n더 이상 랩을 할 수 없어.\n\n메이슨홈은 결국 랩을 포기하고\n편의점 알바를 시작했다.',
+      '체력이 바닥났다...\n몸이 버티질 못했어.\n\n꿈은 꿈으로 남았다.',
+    ];
+
+    function initState() {
+      state = {
+        stage: 0,
+        hp: 100,
+        skill: 0,
+        fame: 0,
+        fan: 0,
+        money: 0,
+        dead: false,
+        ended: false,
+        actionCount: 0,
+      };
+    }
+
+    // =====================
+    // 픽셀 캐릭터 그리기
+    // =====================
+    const CHAR_PIXELS = [
+      // 삭발 머리 (검정)
+      [0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0],
+      [0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0],
+      [0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0],
+      // 선글라스 (파랑)
+      [0,0,2,2,2,1,1,1,2,2,2,2,0,0,0,0,0,0,0,0],
+      [0,0,2,2,2,1,1,1,2,2,2,2,0,0,0,0,0,0,0,0],
+      // 얼굴
+      [0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0],
+      [0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0],
+      // 목
+      [0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0],
+      // 트랙수트 몸통 (검정+흰줄)
+      [0,3,3,3,3,3,3,3,3,3,3,3,3,0,0,0,0,0,0,0],
+      [3,3,4,3,3,3,3,3,3,3,3,4,3,3,0,0,0,0,0,0],
+      [3,3,4,3,3,3,3,3,3,3,3,4,3,3,0,0,0,0,0,0],
+      [3,3,4,3,3,3,3,3,3,3,3,4,3,3,0,0,0,0,0,0],
+      [3,3,4,3,3,3,3,3,3,3,3,4,3,3,0,0,0,0,0,0],
+      // 하체
+      [0,0,3,3,3,3,0,0,3,3,3,3,0,0,0,0,0,0,0,0],
+      [0,0,3,3,3,3,0,0,3,3,3,3,0,0,0,0,0,0,0,0],
+      [0,0,3,3,3,3,0,0,3,3,3,3,0,0,0,0,0,0,0,0],
+      // 신발
+      [0,0,1,1,1,1,0,0,1,1,1,1,0,0,0,0,0,0,0,0],
+      // 마이크 (오른손)
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    ];
+
+    // 마이크 그리기 추가
+    const MIKE_PIXELS = [
+      [0,0,0,0,0,0,0,0,0,0,0,0,5,5,5,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,0,0,0,0,0],
+    ];
+
+    const COLORS = {
+      0: null,
+      1: '#c8a882', // 피부
+      2: '#0055ff', // 선글라스
+      3: '#1a1a1a', // 트랙수트
+      4: '#ffffff', // 흰 줄
+      5: '#888888', // 마이크
+    };
+
+    function drawChar(stageId) {
+      const canvas = document.getElementById('charCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, 20, 24);
+
+      const merged = [...CHAR_PIXELS];
+      merged[18] = MIKE_PIXELS[0];
+      merged[19] = MIKE_PIXELS[1];
+
+      for (let y = 0; y < merged.length; y++) {
+        for (let x = 0; x < merged[y].length; x++) {
+          const c = merged[y][x];
+          if (c && COLORS[c]) {
+            ctx.fillStyle = COLORS[c];
+            ctx.fillRect(x, y, 1, 1);
+          }
+        }
+      }
+    }
+
+    // =====================
+    // 배경 그리기
+    // =====================
+    let bgFrame = 0;
+    function drawBg() {
+      const canvas = document.getElementById('bgCanvas');
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height;
+      bgFrame++;
+
+      ctx.clearRect(0, 0, w, h);
+
+      const stage = state.stage;
+
+      if (stage === 0) {
+        // 방구석
+        ctx.fillStyle = '#1a1020';
+        ctx.fillRect(0, 0, w, h);
+        // 바닥
+        ctx.fillStyle = '#2a1a30';
+        ctx.fillRect(0, h-20, w, 20);
+        // 책상
+        ctx.fillStyle = '#3a2a10';
+        ctx.fillRect(w-120, h-60, 100, 10);
+        ctx.fillStyle = '#3a2a10';
+        ctx.fillRect(w-110, h-50, 8, 30);
+        ctx.fillRect(w-40, h-50, 8, 30);
+        // 모니터
+        ctx.fillStyle = '#111';
+        ctx.fillRect(w-100, h-90, 60, 35);
+        ctx.fillStyle = '#0055ff';
+        ctx.fillRect(w-98, h-88, 56, 31);
+        // 별 (깜빡)
+        for (let i = 0; i < 8; i++) {
+          ctx.fillStyle = bgFrame % 60 < 30 && i % 2 === 0 ? '#fff' : 'rgba(255,255,255,0.3)';
+          ctx.fillRect(20 + i*30, 10 + (i%3)*15, 2, 2);
+        }
+      } else if (stage === 1) {
+        // 홍대 클럽
+        ctx.fillStyle = '#0a0010';
+        ctx.fillRect(0, 0, w, h);
+        // 네온사인들
+        const neons = ['#ff2df3', '#00c8ff', '#fffc6e', '#b8ff3c'];
+        for (let i = 0; i < 4; i++) {
+          ctx.fillStyle = neons[i];
+          ctx.globalAlpha = 0.6 + Math.sin(bgFrame * 0.05 + i) * 0.3;
+          ctx.fillRect(20 + i*90, 10, 60, 12);
+          ctx.globalAlpha = 0.2;
+          ctx.fillRect(20 + i*90, 0, 60, h);
+          ctx.globalAlpha = 1;
+        }
+        // 바닥
+        ctx.fillStyle = '#1a0a20';
+        ctx.fillRect(0, h-15, w, 15);
+        // 조명 빔
+        ctx.globalAlpha = 0.1;
+        ctx.fillStyle = '#fff';
+        for (let i = 0; i < 3; i++) {
+          ctx.beginPath();
+          ctx.moveTo(60 + i*140, 0);
+          ctx.lineTo(10 + i*140, h);
+          ctx.lineTo(110 + i*140, h);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      } else if (stage === 2) {
+        // 쇼미 무대
+        ctx.fillStyle = '#050508';
+        ctx.fillRect(0, 0, w, h);
+        // 스포트라이트
+        ctx.globalAlpha = 0.15 + Math.sin(bgFrame * 0.03) * 0.05;
+        ctx.fillStyle = '#fffc6e';
+        ctx.beginPath();
+        ctx.moveTo(w/2, 0);
+        ctx.lineTo(w/2 - 80, h);
+        ctx.lineTo(w/2 + 80, h);
+        ctx.closePath();
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        // 무대
+        ctx.fillStyle = '#1a1a2e';
+        ctx.fillRect(0, h-25, w, 25);
+        ctx.fillStyle = '#00c8ff';
+        ctx.fillRect(0, h-26, w, 2);
+        // SMTM 텍스트
+        ctx.fillStyle = '#fffc6e';
+        ctx.font = 'bold 10px monospace';
+        ctx.fillText('SHOW ME THE MONEY', 20, 20);
+      } else if (stage === 3) {
+        // 스튜디오
+        ctx.fillStyle = '#0a0a15';
+        ctx.fillRect(0, 0, w, h);
+        // 믹서
+        ctx.fillStyle = '#1a1a2e';
+        ctx.fillRect(10, h-50, 150, 40);
+        for (let i = 0; i < 8; i++) {
+          ctx.fillStyle = '#00c8ff';
+          ctx.fillRect(20 + i*17, h-45, 8, bgFrame % 40 < 20 ? 15 + i*2 : 20 - i);
+        }
+        // 창문 (외부 야경)
+        ctx.fillStyle = '#0a0a20';
+        ctx.fillRect(w-150, 10, 130, 70);
+        for (let i = 0; i < 20; i++) {
+          ctx.fillStyle = Math.random() > 0.3 ? '#fffc6e' : '#fff';
+          ctx.fillRect(w-140 + (i%5)*22, 20 + Math.floor(i/5)*15, 6, 6);
+        }
+      } else {
+        // 레전드 - 콘서트
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, w, h);
+        // 레이저 빔
+        const laserColors = ['#ff2df3', '#00c8ff', '#fffc6e'];
+        for (let i = 0; i < 6; i++) {
+          ctx.strokeStyle = laserColors[i % 3];
+          ctx.globalAlpha = 0.6;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(w/2, h/2);
+          const angle = (bgFrame * 0.02 + i * Math.PI / 3);
+          ctx.lineTo(w/2 + Math.cos(angle) * w, h/2 + Math.sin(angle) * h);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
+        // 무대
+        ctx.fillStyle = '#1a1a1a';
+        ctx.fillRect(0, h-20, w, 20);
+        // 군중 (픽셀)
+        for (let i = 0; i < 15; i++) {
+          ctx.fillStyle = '#333';
+          ctx.fillRect(10 + i*27, h-35, 10, 15);
+          ctx.fillStyle = '#555';
+          ctx.fillRect(13 + i*27, h-42, 6, 8);
+        }
+      }
+
+      requestAnimationFrame(drawBg);
+    }
+
+    // =====================
+    // UI 업데이트
+    // =====================
+    function updateUI() {
+      const s = state;
+      document.getElementById('stageBadge').textContent = STAGES[s.stage].badge;
+
+      const stats = ['hp', 'skill', 'fame', 'fan'];
+      const maxes = { hp: 100, skill: 100, fame: 100, fan: 100 };
+      stats.forEach(k => {
+        const v = Math.max(0, Math.min(100, s[k]));
+        document.getElementById('bar-' + k).style.width = v + '%';
+        document.getElementById('val-' + k).textContent = Math.floor(v);
+      });
+
+      document.getElementById('moneyRow').textContent = '💰 ' + s.money.toLocaleString() + '원';
+
+      const statuses = [
+        '방구석에서 혼자 랩 연습 중...',
+        '홍대 클럽 무대에 서다.',
+        '쇼미더머니 도전 중! 🔥',
+        '메이저 래퍼로 활동 중.',
+        '👑 살아있는 레전드.',
+      ];
+      document.getElementById('charStatus').textContent = statuses[s.stage];
+
+      // 진급 버튼
+      const req = STAGES[s.stage].req;
+      const btn = document.getElementById('promoteBtn');
+      if (req && canPromote()) {
+        btn.classList.add('visible');
+        btn.textContent = `▶ ${STAGES[s.stage + 1].name}(으)로 진급!`;
+      } else {
+        btn.classList.remove('visible');
+      }
+
+      renderActions();
+    }
+
+    function canPromote() {
+      const req = STAGES[state.stage].req;
+      if (!req) return false;
+      return Object.entries(req).every(([k, v]) => state[k] >= v);
+    }
+
+    function renderActions() {
+      const area = document.getElementById('actionArea');
+      const acts = ACTIONS[state.stage];
+      area.innerHTML = acts.map(a => `
+        <button class="action-btn ${a.special ? 'special' : ''}"
+          onclick="doAction('${a.fn}')">
+          ${a.label}
+        </button>
+      `).join('');
+    }
+
+    // =====================
+    // 액션
+    // =====================
+    function doAction(fn) {
+      if (state.dead || state.ended) return;
+
+      const acts = ACTIONS[state.stage];
+      const act = acts.find(a => a.fn === fn);
+      if (!act) return;
+
+      // 비용 체크
+      if (act.cost.money && state.money + act.cost.money < 0) {
+        setMsg('💸 돈이 부족해! 공연이나 다른 걸 먼저 해봐.');
+        return;
+      }
+      if (act.cost.hp && state.hp + act.cost.hp <= 0) {
+        setMsg('😵 체력이 너무 낮아! 먼저 자고 와.');
+        return;
+      }
+
+      // 비용 적용
+      Object.entries(act.cost).forEach(([k, v]) => { state[k] = Math.max(0, state[k] + v); });
+
+      // 랜덤 이벤트 (10% 확률)
+      let bonus = '';
+      if (Math.random() < 0.1 && fn !== 'sleep') {
+        state.fame = Math.min(100, state.fame + 5);
+        bonus = '\n<span class="success">✨ 운이 좋았다! 명성 +5 보너스!</span>';
+      }
+
+      // 이득 적용
+      Object.entries(act.gain).forEach(([k, v]) => {
+        if (k === 'money') state[k] += v;
+        else state[k] = Math.min(100, state[k] + v);
+      });
+
+      state.actionCount++;
+
+      // 메시지
+      const msgs = MESSAGES[fn] || ['...'];
+      const msg = msgs[Math.floor(Math.random() * msgs.length)];
+      setMsg(msg + bonus);
+
+      // 체력 0 체크
+      if (state.hp <= 0) {
+        gameOver();
+        return;
+      }
+
+      // 레전드 엔딩 체크
+      if (state.stage === 4 && state.actionCount > 5 && state.fame >= 95 && state.fan >= 80) {
+        triggerEnding();
+        return;
+      }
+
+      drawChar(state.stage);
+      updateUI();
+    }
+
+    function promote() {
+      if (!canPromote()) return;
+      state.stage++;
+      state.hp = Math.min(100, state.hp + 20);
+
+      const msgs = [
+        '🎤 드디어 언더 래퍼가 됐다!\n홍대 클럽 무대에 서는 날이 왔어.',
+        '🏆 쇼미더머니 참가!\n이게 기회야. 전국에 이름을 알려.',
+        '🎵 메이저 데뷔!\n드디어 세상이 메이슨홈을 알아보기 시작했다.',
+        '👑 레전드 등극!\n이제 넌 한국 힙합의 역사가 됐어.',
+      ];
+      setMsg('<span class="success">[ 진급! ]</span>\n' + msgs[state.stage - 1]);
+      drawChar(state.stage);
+      updateUI();
+    }
+
+    function setMsg(text) {
+      document.getElementById('msgBox').innerHTML = text.replace(/\n/g, '<br>');
+    }
+
+    function gameOver() {
+      state.dead = true;
+      document.getElementById('gameoverPanel').classList.add('visible');
+      document.getElementById('actionArea').innerHTML = '';
+      document.getElementById('promoteBtn').classList.remove('visible');
+      const msg = GAMEOVER_MSGS[Math.floor(Math.random() * GAMEOVER_MSGS.length)];
+      document.getElementById('gameoverMsg').innerHTML = msg.replace(/\n/g, '<br>');
+    }
+
+    function triggerEnding() {
+      state.ended = true;
+      document.getElementById('endingPanel').classList.add('visible');
+      document.getElementById('actionArea').innerHTML = '';
+      document.getElementById('promoteBtn').classList.remove('visible');
+      document.getElementById('endingTitle').innerHTML =
+        '👑 TRUE ENDING<br><br>메이슨홈, 레전드가 되다.';
+      document.getElementById('endingSub').innerHTML =
+        '쇼미더머니부터 시작해서<br>이제 한국 힙합을 대표하는 이름이 됐다.<br><br>팬들은 아직도 그의 랩을 기다린다.<br><br>💰 총 자산: ' + state.money.toLocaleString() + '원<br>👥 팬: ' + Math.floor(state.fan) + '점';
+    }
+
+    function restartGame() {
+      document.getElementById('gameoverPanel').classList.remove('visible');
+      document.getElementById('endingPanel').classList.remove('visible');
+      initState();
+      drawChar(0);
+      updateUI();
+      setMsg('<span class="highlight">[ 다시 시작 ]</span><br>포기하지 마. 다시 해보자.');
+    }
+
+    // =====================
+    // 시작
+    // =====================
+    initState();
+    drawChar(0);
+    updateUI();
+    drawBg();
+  </script>
+</body>
+</html>
