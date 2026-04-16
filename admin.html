@@ -130,10 +130,29 @@
           <input type="number" id="sc-order" value="1" min="1" />
         </div>
       </div>
-      <label>배경 이미지 URL</label>
+      <label>배경 이미지</label>
+      <div style="display:flex;gap:6px;margin-bottom:4px;">
+        <button class="btn btn-blue btn-sm" onclick="toggleImgInput('bg','url')">🔗 URL</button>
+        <button class="btn btn-blue btn-sm" onclick="toggleImgInput('bg','file')">📁 파일</button>
+      </div>
       <input type="text" id="sc-bg" placeholder="https://..." />
-      <label>캐릭터 이미지 URL</label>
+      <div id="bg-file-wrap" style="display:none;">
+        <input type="file" id="sc-bg-file" accept="image/*" style="margin-bottom:6px;" />
+        <button class="btn btn-blue btn-sm" onclick="uploadImg('bg')">업로드</button>
+        <span id="bg-upload-status" style="font-size:11px;color:#888;margin-left:6px;"></span>
+      </div>
+
+      <label>캐릭터 이미지</label>
+      <div style="display:flex;gap:6px;margin-bottom:4px;">
+        <button class="btn btn-blue btn-sm" onclick="toggleImgInput('char','url')">🔗 URL</button>
+        <button class="btn btn-blue btn-sm" onclick="toggleImgInput('char','file')">📁 파일</button>
+      </div>
       <input type="text" id="sc-char" placeholder="https://..." />
+      <div id="char-file-wrap" style="display:none;">
+        <input type="file" id="sc-char-file" accept="image/*" style="margin-bottom:6px;" />
+        <button class="btn btn-blue btn-sm" onclick="uploadImg('char')">업로드</button>
+        <span id="char-upload-status" style="font-size:11px;color:#888;margin-left:6px;"></span>
+      </div>
       <button class="btn btn-green" onclick="addScene()">씬 추가하기</button>
     </div>
 
@@ -222,7 +241,45 @@
   );
 
   const ADMIN_PW = '013000';
+  const BUCKET = 'dongkki';
   let scenes = [], dialogues = [], choices = [];
+
+  // 이미지 업로드 탭 토글
+  function toggleImgInput(type, mode) {
+    const urlInput = document.getElementById('sc-' + type);
+    const fileWrap = document.getElementById(type + '-file-wrap');
+    if (mode === 'url') {
+      urlInput.style.display = 'block';
+      fileWrap.style.display = 'none';
+    } else {
+      urlInput.style.display = 'none';
+      fileWrap.style.display = 'block';
+    }
+  }
+
+  // 파일 업로드 (한글 파일명 처리)
+  async function uploadImg(type) {
+    const fileInput = document.getElementById('sc-' + type + '-file');
+    const status = document.getElementById(type + '-upload-status');
+    const file = fileInput.files[0];
+    if (!file) { status.textContent = '파일을 선택해줘요!'; return; }
+
+    status.textContent = '업로드 중...';
+
+    // 한글 파일명 → 타임스탬프로 변경
+    const ext = file.name.split('.').pop();
+    const fileName = type + '_' + Date.now() + '.' + ext;
+
+    const { error } = await _supabase.storage.from(BUCKET).upload(fileName, file);
+    if (error) { status.textContent = '❌ 실패: ' + error.message; return; }
+
+    const { data: urlData } = _supabase.storage.from(BUCKET).getPublicUrl(fileName);
+    document.getElementById('sc-' + type).value = urlData.publicUrl;
+    document.getElementById('sc-' + type).style.display = 'block';
+    document.getElementById(type + '-file-wrap').style.display = 'none';
+    status.textContent = '';
+    fileInput.value = '';
+  }
 
   // 로그인
   function checkLogin() {
