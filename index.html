@@ -4,13 +4,13 @@
   <meta charset="UTF-8"/>
   <title>래퍼남친 똥끼몽</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
 
     body{
       background:#000;
-      font-family:'Jua',sans-serif;
+      font-family:'Pretendard',sans-serif;
       height:100vh;
       overflow:hidden;
       display:flex;
@@ -159,11 +159,12 @@
     .choice-btn{
       flex:1;
       background:rgba(0,0,0,0.6);
-      border:none;
+      border:2px solid rgba(255,255,255,0.8);
       border-radius:14px;
       padding:14px 10px;
-      font-family:'Jua',sans-serif;
+      font-family:'Pretendard',sans-serif;
       font-size:14px;
+      font-weight:600;
       color:#fff;
       cursor:pointer;
       text-align:center;
@@ -249,28 +250,32 @@
     }
     .start-btn:hover{background:#eee;}
 
-    /* 스탯 토스트 */
+    /* 스탯 토스트 - 정가운데 */
     .stat-toast{
       position:absolute;
-      top:90px;right:14px;
+      top:50%;
+      left:50%;
+      transform:translate(-50%,-50%);
       z-index:50;
       display:flex;
       flex-direction:column;
-      gap:4px;
+      align-items:center;
+      gap:6px;
       pointer-events:none;
     }
     .toast-item{
       background:rgba(0,0,0,0.75);
       color:#fff;
-      font-size:11px;
-      padding:3px 10px;
+      font-size:15px;
+      font-weight:700;
+      padding:6px 18px;
       border-radius:999px;
       animation:toastUp 2s forwards;
     }
     @keyframes toastUp{
       0%{opacity:1;transform:translateY(0);}
       70%{opacity:1;}
-      100%{opacity:0;transform:translateY(-30px);}
+      100%{opacity:0;transform:translateY(-40px);}
     }
 
     /* 결과 화면 */
