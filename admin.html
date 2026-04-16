@@ -49,34 +49,35 @@
     .row{display:flex;gap:8px;align-items:flex-start;}
     .row>*{flex:1;}
 
-    .list-item{
-      background:#fafafa;border:1px solid #eee;border-radius:10px;
-      padding:10px 12px;margin-bottom:8px;
-    }
+    .list-item{background:#fafafa;border:1px solid #eee;border-radius:10px;padding:10px 12px;margin-bottom:8px;}
     .list-item-top{display:flex;align-items:center;justify-content:space-between;gap:8px;}
     .list-item-info{flex:1;}
     .list-item-title{font-size:13px;font-weight:700;color:#333;}
     .list-item-sub{font-size:11px;color:#999;margin-top:2px;}
     .list-item-actions{display:flex;gap:4px;flex-shrink:0;}
 
-    /* 수정 폼 */
     .edit-form{display:none;margin-top:10px;padding:10px;background:#f0f7f0;border-radius:8px;border:1px solid #b8d8b8;}
     .edit-form.open{display:block;}
     .edit-form input,.edit-form textarea,.edit-form select{background:#fff;}
 
     .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;background:#e8f5e8;color:#5a8a5a;margin-left:4px;}
-    .badge.orange{background:#fff3e0;color:#e67e22;}
     .badge.blue{background:#e3f2fd;color:#1976d2;}
 
+    /* 스탯 효과 */
     .stat-effects{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
     .stat-row{display:flex;align-items:center;gap:4px;}
     .stat-row label{margin:0;font-size:11px;width:auto;white-space:nowrap;}
     .stat-row input{width:60px;margin:0;padding:4px 6px;font-size:11px;}
 
+    /* 스탯 설명 박스 */
+    .stat-guide{
+      background:#e8f5e8;border-radius:8px;padding:10px 12px;
+      font-size:11px;color:#5a8a5a;margin-bottom:12px;line-height:1.8;
+    }
+
     .empty{text-align:center;color:#bbb;padding:20px;font-size:13px;}
     .notice{background:#e8f5e8;border-radius:8px;padding:10px 12px;font-size:12px;color:#5a8a5a;margin-bottom:14px;}
 
-    /* 선택지 다중 입력 */
     .choice-group{background:#f9f9f9;border:1px solid #eee;border-radius:10px;padding:12px;margin-bottom:10px;position:relative;}
     .choice-group-title{font-size:12px;color:#5a8a5a;font-weight:700;margin-bottom:8px;}
     .choice-group .remove-choice{position:absolute;top:8px;right:8px;background:#ff6b6b;border:none;color:#fff;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer;line-height:20px;text-align:center;padding:0;}
@@ -149,7 +150,6 @@
       </div>
       <button class="btn btn-green" onclick="addScene()">씬 추가하기</button>
     </div>
-
     <div class="card">
       <div class="card-title">📋 씬 목록</div>
       <div id="sceneList"><div class="empty">씬이 없어요</div></div>
@@ -158,7 +158,7 @@
 
   <!-- 대사 관리 -->
   <div class="tab-panel" id="tab-dialogues">
-    <div class="notice">💡 대사 = 씬 안에서 순서대로 보여지는 텍스트예요.</div>
+    <div class="notice">💡 대사 = 씬 안에서 순서대로 보여지는 텍스트예요. 선택지 없는 대사는 ▼ 버튼으로 넘어가요.</div>
     <div class="card">
       <div class="card-title">➕ 새 대사 추가</div>
       <label>씬 선택</label>
@@ -173,8 +173,8 @@
           <input type="number" id="dl-order" value="1" min="1" />
         </div>
       </div>
-      <label>대사 내용</label>
-      <textarea id="dl-text" placeholder="예) 야... 나 래퍼 될 것 같아. 진짜로."></textarea>
+      <label>대사 내용 ({name} 쓰면 플레이어 이름으로 교체돼요)</label>
+      <textarea id="dl-text" placeholder="예) {name}아, 나 래퍼 될 것 같아. 진짜로."></textarea>
       <button class="btn btn-green" onclick="addDialogue()">대사 추가하기</button>
     </div>
     <div class="card">
@@ -192,10 +192,7 @@
       <div class="card-title">➕ 선택지 추가</div>
       <label>연결할 대사 선택</label>
       <select id="ch-dialogue"></select>
-
-      <div id="choiceInputs">
-        <!-- JS로 렌더 -->
-      </div>
+      <div id="choiceInputs"></div>
       <button class="add-choice-btn" onclick="addChoiceInput()">+ 선택지 추가</button>
       <button class="btn btn-green" style="width:100%" onclick="saveChoices()">선택지 저장하기</button>
     </div>
@@ -228,6 +225,52 @@
   let scenes = [], dialogues = [], choices = [];
   let choiceCount = 0;
 
+  // 스탯 정의 (게임과 동일하게)
+  const STATS = [
+    { key:'fan',   icon:'❤️', label:'호감도', field:'fan_effect' },
+    { key:'skill', icon:'⭐', label:'실력',   field:'skill_effect' },
+    { key:'money', icon:'💰', label:'돈',     field:'money_effect' },
+    { key:'hp',    icon:'🩹', label:'체력(게임오버용)', field:'hp_effect' },
+  ];
+
+  function statEffectHTML(prefix) {
+    return `
+      <div class="stat-guide">
+        💡 스탯 효과: 양수(+)는 증가, 음수(-)는 감소<br>
+        ❤️ 호감도 · ⭐ 실력 · 💰 돈 · 🩹 체력(0되면 게임오버)
+      </div>
+      <div class="stat-effects">
+        ${STATS.map(s=>`
+          <div class="stat-row">
+            <label>${s.icon} ${s.label}</label>
+            <input type="number" id="${prefix}-${s.key}" value="0" />
+          </div>`).join('')}
+      </div>`;
+  }
+
+  function statEditHTML(prefix, c) {
+    return `
+      <div class="stat-effects">
+        ${STATS.map(s=>`
+          <div class="stat-row">
+            <label>${s.icon} ${s.label}</label>
+            <input type="number" id="${prefix}-${s.key}" value="${c[s.field]||0}" />
+          </div>`).join('')}
+      </div>`;
+  }
+
+  function getStatValues(prefix) {
+    const obj = {};
+    STATS.forEach(s => {
+      obj[s.field] = parseInt(document.getElementById(`${prefix}-${s.key}`)?.value) || 0;
+    });
+    return obj;
+  }
+
+  function formatEffects(c) {
+    return STATS.map(s => c[s.field] ? `${s.icon}${c[s.field]>0?'+':''}${c[s.field]}` : '').filter(Boolean).join(' ') || '효과없음';
+  }
+
   function checkLogin() {
     if (document.getElementById('pwInput').value === ADMIN_PW) {
       document.getElementById('loginWrap').style.display = 'none';
@@ -254,9 +297,6 @@
     renderChoiceInputs();
   }
 
-  // =====================
-  // 이미지 업로드
-  // =====================
   function toggleImgInput(type, mode) {
     document.getElementById('sc-' + type).style.display = mode === 'url' ? 'block' : 'none';
     document.getElementById(type + '-file-wrap').style.display = mode === 'file' ? 'block' : 'none';
@@ -280,9 +320,7 @@
     fileInput.value = '';
   }
 
-  // =====================
   // 씬
-  // =====================
   async function loadScenes() {
     const { data } = await _supabase.from('scenes').select('*').order('order');
     scenes = data || [];
@@ -331,10 +369,7 @@
       </div>`).join('');
   }
 
-  function toggleEditScene(id) {
-    const el = document.getElementById('edit-scene-' + id);
-    el.classList.toggle('open');
-  }
+  function toggleEditScene(id) { document.getElementById('edit-scene-' + id).classList.toggle('open'); }
 
   async function updateScene(id) {
     const title = document.getElementById('es-title-' + id).value.trim();
@@ -368,9 +403,7 @@
     await loadAll();
   }
 
-  // =====================
   // 대사
-  // =====================
   async function loadDialogues() {
     const filterId = document.getElementById('dl-filter')?.value;
     let q = _supabase.from('dialogues').select('*').order('scene_id').order('order');
@@ -413,9 +446,7 @@
     }).join('');
   }
 
-  function toggleEditDialogue(id) {
-    document.getElementById('edit-dlg-' + id).classList.toggle('open');
-  }
+  function toggleEditDialogue(id) { document.getElementById('edit-dlg-' + id).classList.toggle('open'); }
 
   async function updateDialogue(id) {
     const speaker = document.getElementById('ed-speaker-' + id).value.trim();
@@ -446,9 +477,7 @@
     await loadAll();
   }
 
-  // =====================
-  // 선택지 (다중 입력)
-  // =====================
+  // 선택지
   function renderChoiceInputs() {
     const container = document.getElementById('choiceInputs');
     if (!container) return;
@@ -470,14 +499,7 @@
       <input type="text" id="cg-text-${idx}" placeholder="예) 연습할게!" />
       <label>다음 씬</label>
       <select id="cg-next-${idx}">${sceneOpts}</select>
-      <div style="font-size:11px;color:#888;margin-bottom:6px;">스탯 효과</div>
-      <div class="stat-effects">
-        <div class="stat-row"><label>🎤</label><input type="number" id="cg-skill-${idx}" value="0" /></div>
-        <div class="stat-row"><label>🌟</label><input type="number" id="cg-fame-${idx}" value="0" /></div>
-        <div class="stat-row"><label>👥</label><input type="number" id="cg-fan-${idx}" value="0" /></div>
-        <div class="stat-row"><label>💰</label><input type="number" id="cg-money-${idx}" value="0" /></div>
-        <div class="stat-row"><label>❤️</label><input type="number" id="cg-hp-${idx}" value="0" /></div>
-      </div>`;
+      ${statEffectHTML('cg-s' + idx)}`;
     document.getElementById('choiceInputs').appendChild(div);
   }
 
@@ -498,15 +520,12 @@
       const idx = g.id.replace('cg-', '');
       const text = document.getElementById('cg-text-' + idx)?.value.trim();
       if (!text) continue;
+      const stats = getStatValues('cg-s' + idx);
       inserts.push({
         dialogue_id,
         text,
         next_scene_id: parseInt(document.getElementById('cg-next-' + idx)?.value) || null,
-        skill_effect: parseInt(document.getElementById('cg-skill-' + idx)?.value) || 0,
-        fame_effect: parseInt(document.getElementById('cg-fame-' + idx)?.value) || 0,
-        fan_effect: parseInt(document.getElementById('cg-fan-' + idx)?.value) || 0,
-        money_effect: parseInt(document.getElementById('cg-money-' + idx)?.value) || 0,
-        hp_effect: parseInt(document.getElementById('cg-hp-' + idx)?.value) || 0,
+        ...stats
       });
     }
 
@@ -514,7 +533,6 @@
     const { error } = await _supabase.from('choices').insert(inserts);
     if (error) { alert('저장 실패 😢 ' + error.message); return; }
 
-    // 입력창 초기화
     document.getElementById('choiceInputs').innerHTML = '';
     choiceCount = 0;
     addChoiceInput();
@@ -535,18 +553,12 @@
       const nextScene = scenes.find(s => s.id === c.next_scene_id);
       const dlg = dialogues.find(d => d.id === c.dialogue_id);
       const sceneName = dlg ? (scenes.find(s => s.id === dlg.scene_id)?.title || '?') : '?';
-      const effects = [];
-      if (c.skill_effect) effects.push(`🎤${c.skill_effect>0?'+':''}${c.skill_effect}`);
-      if (c.fame_effect) effects.push(`🌟${c.fame_effect>0?'+':''}${c.fame_effect}`);
-      if (c.fan_effect) effects.push(`👥${c.fan_effect>0?'+':''}${c.fan_effect}`);
-      if (c.money_effect) effects.push(`💰${c.money_effect>0?'+':''}${c.money_effect}`);
-      if (c.hp_effect) effects.push(`❤️${c.hp_effect>0?'+':''}${c.hp_effect}`);
       return `
         <div class="list-item">
           <div class="list-item-top">
             <div class="list-item-info">
               <div class="list-item-title">"${c.text}"</div>
-              <div class="list-item-sub">씬: ${sceneName} · 다음: ${nextScene?.title||'없음'} · ${effects.join(' ')||'효과없음'}</div>
+              <div class="list-item-sub">씬: ${sceneName} · 다음: ${nextScene?.title||'없음'} · ${formatEffects(c)}</div>
             </div>
             <div class="list-item-actions">
               <button class="btn btn-orange btn-sm" onclick="toggleEditChoice(${c.id})">수정</button>
@@ -561,13 +573,7 @@
               <option value="">없음</option>
               ${scenes.map(s=>`<option value="${s.id}" ${c.next_scene_id===s.id?'selected':''}>${s.title}</option>`).join('')}
             </select>
-            <div class="stat-effects">
-              <div class="stat-row"><label>🎤</label><input type="number" id="ec-skill-${c.id}" value="${c.skill_effect||0}" /></div>
-              <div class="stat-row"><label>🌟</label><input type="number" id="ec-fame-${c.id}" value="${c.fame_effect||0}" /></div>
-              <div class="stat-row"><label>👥</label><input type="number" id="ec-fan-${c.id}" value="${c.fan_effect||0}" /></div>
-              <div class="stat-row"><label>💰</label><input type="number" id="ec-money-${c.id}" value="${c.money_effect||0}" /></div>
-              <div class="stat-row"><label>❤️</label><input type="number" id="ec-hp-${c.id}" value="${c.hp_effect||0}" /></div>
-            </div>
+            ${statEditHTML('ec-s' + c.id, c)}
             <div style="display:flex;gap:6px;">
               <button class="btn btn-green btn-sm" onclick="updateChoice(${c.id})">저장</button>
               <button class="btn btn-sm" style="background:#eee;" onclick="toggleEditChoice(${c.id})">취소</button>
@@ -577,22 +583,14 @@
     }).join('');
   }
 
-  function toggleEditChoice(id) {
-    document.getElementById('edit-ch-' + id).classList.toggle('open');
-  }
+  function toggleEditChoice(id) { document.getElementById('edit-ch-' + id).classList.toggle('open'); }
 
   async function updateChoice(id) {
     const text = document.getElementById('ec-text-' + id).value.trim();
     const next_scene_id = parseInt(document.getElementById('ec-next-' + id).value) || null;
-    const skill_effect = parseInt(document.getElementById('ec-skill-' + id).value) || 0;
-    const fame_effect = parseInt(document.getElementById('ec-fame-' + id).value) || 0;
-    const fan_effect = parseInt(document.getElementById('ec-fan-' + id).value) || 0;
-    const money_effect = parseInt(document.getElementById('ec-money-' + id).value) || 0;
-    const hp_effect = parseInt(document.getElementById('ec-hp-' + id).value) || 0;
+    const stats = getStatValues('ec-s' + id);
     if (!text) { alert('텍스트를 입력해줘요!'); return; }
-    const { error } = await _supabase.from('choices').update({
-      text, next_scene_id, skill_effect, fame_effect, fan_effect, money_effect, hp_effect
-    }).eq('id', id);
+    const { error } = await _supabase.from('choices').update({ text, next_scene_id, ...stats }).eq('id', id);
     if (error) { alert('수정 실패 😢'); return; }
     await loadAll();
   }
@@ -603,9 +601,6 @@
     await loadAll();
   }
 
-  // =====================
-  // 셀렉트 채우기
-  // =====================
   function populateSelects() {
     const sceneOpts = scenes.map(s => `<option value="${s.id}">${s.title} (${s.stage})</option>`).join('');
     const dlgOpts = dialogues.map(d => {
@@ -618,9 +613,6 @@
     document.getElementById('pv-scene').innerHTML = sceneOpts;
   }
 
-  // =====================
-  // 미리보기
-  // =====================
   async function loadPreview() {
     const sceneId = parseInt(document.getElementById('pv-scene').value);
     if (!sceneId) return;
@@ -630,7 +622,7 @@
     el.innerHTML = `
       <div style="position:relative;border-radius:12px;overflow:hidden;margin-bottom:12px;background:#333;height:200px;
         background-image:url(${scene.background_url||''});background-size:cover;background-position:center;">
-        ${scene.character_url?`<img src="${scene.character_url}" style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);height:180px;object-fit:contain;">`: ''}
+        ${scene.character_url?`<img src="${scene.character_url}" style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);height:180px;object-fit:contain;">`:''}
       </div>
       <div style="background:#fffde7;border-radius:12px;padding:14px;border:2px solid #ffeb3b;">
         <div style="font-size:11px;color:#888;margin-bottom:8px;">씬: ${scene.title} | ${scene.stage}</div>
@@ -641,9 +633,12 @@
               <div style="font-size:11px;color:#5a8a5a;font-weight:700;margin-bottom:4px;">${d.speaker||'나레이션'}</div>
               <div style="font-size:13px;color:#333;">${d.text}</div>
               ${dlgChoices.length?`
-                <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
-                  ${dlgChoices.map(c=>`<div style="padding:4px 12px;background:#5a8a5a;color:#fff;border-radius:999px;font-size:11px;">${c.text}</div>`).join('')}
-                </div>`:''}
+                <div style="display:flex;flex-direction:column;gap:4px;margin-top:8px;">
+                  ${dlgChoices.map(c=>`
+                    <div style="padding:6px 12px;background:#111;color:#fff;border-radius:8px;font-size:11px;">
+                      ${c.text} <span style="color:#aaa;font-size:10px;">${formatEffects(c)}</span>
+                    </div>`).join('')}
+                </div>`:'<div style="font-size:11px;color:#aaa;margin-top:4px;">▼ 탭으로 넘어감</div>'}
             </div>`;
         }).join('')}
         ${!sceneDlgs.length?'<div class="empty">이 씬에 대사가 없어요</div>':''}
