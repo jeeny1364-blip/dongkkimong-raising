@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <title>똥끼몽 어드민</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:#f5f0e8;font-family:'Jua',sans-serif;color:#333;padding:20px;}
+    h1{font-size:18px;color:#5a8a5a;margin-bottom:20px;text-align:center;}
+
+    .login-wrap{max-width:320px;margin:100px auto;background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,0.1);text-align:center;}
+    .login-wrap h2{font-size:16px;color:#5a8a5a;margin-bottom:16px;}
+    .login-wrap input{width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:8px;font-family:'Jua',sans-serif;font-size:14px;margin-bottom:10px;}
+    .login-wrap button{width:100%;padding:10px;background:#5a8a5a;border:none;border-radius:8px;color:#fff;font-family:'Jua',sans-serif;font-size:14px;cursor:pointer;}
+
+    .admin-wrap{max-width:900px;margin:0 auto;display:none;}
+    .tabs{display:flex;gap:8px;margin-bottom:20px;}
+    .tab{padding:8px 16px;border-radius:999px;border:2px solid #ddd;background:#fff;font-family:'Jua',sans-serif;font-size:13px;cursor:pointer;color:#888;}
+    .tab.active{background:#5a8a5a;border-color:#5a8a5a;color:#fff;}
+
+    .tab-panel{display:none;}
+    .tab-panel.active{display:block;}
+
+    .card{background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,0.07);}
+    .card-title{font-size:14px;color:#5a8a5a;font-weight:700;margin-bottom:12px;}
+
+    label{font-size:12px;color:#888;display:block;margin-bottom:4px;}
+    input[type=text],input[type=number],textarea,select{
+      width:100%;padding:8px 10px;border:2px solid #eee;border-radius:8px;
+      font-family:'Jua',sans-serif;font-size:13px;margin-bottom:10px;
+      background:#fafafa;color:#333;outline:none;
+    }
+    input[type=text]:focus,textarea:focus,select:focus{border-color:#5a8a5a;}
+    textarea{min-height:80px;resize:vertical;}
+
+    .btn{padding:8px 16px;border-radius:8px;border:none;font-family:'Jua',sans-serif;font-size:13px;cursor:pointer;}
+    .btn-green{background:#5a8a5a;color:#fff;}
+    .btn-green:hover{background:#4a7a4a;}
+    .btn-red{background:#ff6b6b;color:#fff;}
+    .btn-red:hover{background:#ff5252;}
+    .btn-blue{background:#6b9fff;color:#fff;}
+    .btn-blue:hover{background:#5a8fff;}
+    .btn-sm{padding:4px 10px;font-size:11px;}
+
+    .row{display:flex;gap:8px;align-items:flex-start;}
+    .row>*{flex:1;}
+
+    /* 목록 */
+    .list-item{
+      background:#fafafa;border:1px solid #eee;border-radius:10px;
+      padding:10px 12px;margin-bottom:8px;
+      display:flex;align-items:center;justify-content:space-between;gap:8px;
+    }
+    .list-item-info{flex:1;}
+    .list-item-title{font-size:13px;font-weight:700;color:#333;}
+    .list-item-sub{font-size:11px;color:#999;margin-top:2px;}
+    .list-item-actions{display:flex;gap:4px;flex-shrink:0;}
+
+    /* 씬 미리보기 */
+    .scene-preview{
+      width:100%;height:120px;border-radius:8px;background:#eee;
+      background-size:cover;background-position:center;
+      margin-bottom:8px;position:relative;overflow:hidden;
+    }
+    .scene-preview-char{
+      position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+      height:100px;object-fit:contain;
+    }
+
+    .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;background:#e8f5e8;color:#5a8a5a;margin-left:4px;}
+    .badge.orange{background:#fff3e0;color:#e67e22;}
+    .badge.blue{background:#e3f2fd;color:#1976d2;}
+
+    .stat-effects{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+    .stat-row{display:flex;align-items:center;gap:4px;}
+    .stat-row label{margin:0;font-size:11px;width:auto;white-space:nowrap;}
+    .stat-row input{width:60px;margin:0;padding:4px 6px;font-size:11px;}
+
+    .empty{text-align:center;color:#bbb;padding:20px;font-size:13px;}
+
+    .stage-select-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+    .stage-btn{padding:4px 10px;border-radius:999px;border:2px solid #ddd;background:#fff;font-size:11px;cursor:pointer;font-family:'Jua',sans-serif;}
+    .stage-btn.active{background:#5a8a5a;border-color:#5a8a5a;color:#fff;}
+
+    .notice{background:#e8f5e8;border-radius:8px;padding:10px 12px;font-size:12px;color:#5a8a5a;margin-bottom:14px;}
+  </style>
+</head>
+<body>
+
+<!-- 로그인 -->
+<div class="login-wrap" id="loginWrap">
+  <h2>🌿 똥끼몽 어드민</h2>
+  <input type="password" id="pwInput" placeholder="비밀번호" />
+  <button onclick="checkLogin()">로그인</button>
+</div>
+
+<!-- 어드민 -->
+<div class="admin-wrap" id="adminWrap">
+  <h1>🌿 똥끼몽 어드민</h1>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('scenes')">🏞️ 씬 관리</button>
+    <button class="tab" onclick="switchTab('dialogues')">💬 대사 관리</button>
+    <button class="tab" onclick="switchTab('choices')">🔀 선택지 관리</button>
+    <button class="tab" onclick="switchTab('preview')">👀 미리보기</button>
+  </div>
+
+  <!-- 씬 관리 -->
+  <div class="tab-panel active" id="tab-scenes">
+    <div class="notice">💡 씬 = 하나의 장면이에요. 배경 이미지와 캐릭터 사진을 설정하고 대사를 연결해요.</div>
+    <div class="card">
+      <div class="card-title">➕ 새 씬 추가</div>
+      <label>씬 제목</label>
+      <input type="text" id="sc-title" placeholder="예) 학교 교실에서 처음 만남" />
+      <div class="row">
+        <div>
+          <label>스테이지</label>
+          <select id="sc-stage">
+            <option value="학생">📚 학생</option>
+            <option value="언더">🎤 언더 래퍼</option>
+            <option value="쇼미">🏆 쇼미더머니</option>
+            <option value="메이저">🎵 메이저</option>
+            <option value="레전드">👑 레전드</option>
+          </select>
+        </div>
+        <div>
+          <label>순서 (order)</label>
+          <input type="number" id="sc-order" value="1" min="1" />
+        </div>
+      </div>
+      <label>배경 이미지 URL</label>
+      <input type="text" id="sc-bg" placeholder="https://..." />
+      <label>캐릭터 이미지 URL</label>
+      <input type="text" id="sc-char" placeholder="https://..." />
+      <button class="btn btn-green" onclick="addScene()">씬 추가하기</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📋 씬 목록</div>
+      <div id="sceneList"><div class="empty">씬이 없어요</div></div>
+    </div>
+  </div>
+
+  <!-- 대사 관리 -->
+  <div class="tab-panel" id="tab-dialogues">
+    <div class="notice">💡 대사 = 씬 안에서 순서대로 보여지는 텍스트예요. 화자(메이슨홈 or 나레이션 등)를 설정해요.</div>
+    <div class="card">
+      <div class="card-title">➕ 새 대사 추가</div>
+      <label>씬 선택</label>
+      <select id="dl-scene"></select>
+      <div class="row">
+        <div>
+          <label>화자 이름</label>
+          <input type="text" id="dl-speaker" placeholder="예) 메이슨홈, 나레이션" />
+        </div>
+        <div>
+          <label>순서 (order)</label>
+          <input type="number" id="dl-order" value="1" min="1" />
+        </div>
+      </div>
+      <label>대사 내용</label>
+      <textarea id="dl-text" placeholder="예) 야... 나 래퍼 될 것 같아. 진짜로."></textarea>
+      <button class="btn btn-green" onclick="addDialogue()">대사 추가하기</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📋 대사 목록</div>
+      <label>씬 필터</label>
+      <select id="dl-filter" onchange="loadDialogues()"><option value="">전체</option></select>
+      <div id="dialogueList"><div class="empty">대사가 없어요</div></div>
+    </div>
+  </div>
+
+  <!-- 선택지 관리 -->
+  <div class="tab-panel" id="tab-choices">
+    <div class="notice">💡 선택지 = 대사 마지막에 나오는 버튼이에요. 선택하면 다음 씬으로 이동하고 스탯이 변해요.</div>
+    <div class="card">
+      <div class="card-title">➕ 새 선택지 추가</div>
+      <label>연결할 대사 선택</label>
+      <select id="ch-dialogue"></select>
+      <label>선택지 텍스트</label>
+      <input type="text" id="ch-text" placeholder="예) 연습할게!" />
+      <label>다음 씬 (선택 후 이동)</label>
+      <select id="ch-next-scene">
+        <option value="">없음 (게임 종료)</option>
+      </select>
+      <div class="card-title" style="margin-top:8px;font-size:12px;">스탯 효과 (양수=증가, 음수=감소)</div>
+      <div class="stat-effects">
+        <div class="stat-row"><label>🎤 실력</label><input type="number" id="ch-skill" value="0" /></div>
+        <div class="stat-row"><label>🌟 명성</label><input type="number" id="ch-fame" value="0" /></div>
+        <div class="stat-row"><label>👥 팬</label><input type="number" id="ch-fan" value="0" /></div>
+        <div class="stat-row"><label>💰 돈</label><input type="number" id="ch-money" value="0" /></div>
+        <div class="stat-row"><label>❤️ 체력</label><input type="number" id="ch-hp" value="0" /></div>
+      </div>
+      <button class="btn btn-green" onclick="addChoice()">선택지 추가하기</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📋 선택지 목록</div>
+      <div id="choiceList"><div class="empty">선택지가 없어요</div></div>
+    </div>
+  </div>
+
+  <!-- 미리보기 -->
+  <div class="tab-panel" id="tab-preview">
+    <div class="card">
+      <div class="card-title">👀 씬 미리보기</div>
+      <label>씬 선택</label>
+      <select id="pv-scene" onchange="loadPreview()"></select>
+      <div id="previewArea"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const _supabase = supabase.createClient(
+    'https://wsfplnugfazrqylupjjb.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndzZnBsbnVnZmF6cnF5bHVwampiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MTMxMTYsImV4cCI6MjA5MTI4OTExNn0.Aa8nzxI182YgUWU3GoJ4kjiqq-nUeUfY7JxG27BlQYY'
+  );
+
+  const ADMIN_PW = '013000';
+  let scenes = [], dialogues = [], choices = [];
+
+  // 로그인
+  function checkLogin() {
+    if (document.getElementById('pwInput').value === ADMIN_PW) {
+      document.getElementById('loginWrap').style.display = 'none';
+      document.getElementById('adminWrap').style.display = 'block';
+      loadAll();
+    } else { alert('비밀번호가 틀렸어요!'); }
+  }
+  document.getElementById('pwInput').addEventListener('keydown', e => { if (e.key === 'Enter') checkLogin(); });
+
+  // 탭
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach((t,i) => {
+      const tabs = ['scenes','dialogues','choices','preview'];
+      t.classList.toggle('active', tabs[i] === tab);
+    });
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    if (tab === 'preview') loadPreview();
+  }
+
+  // 전체 로드
+  async function loadAll() {
+    await Promise.all([loadScenes(), loadDialogues(), loadChoices()]);
+    populateSelects();
+  }
+
+  // =====================
+  // 씬
+  // =====================
+  async function loadScenes() {
+    const { data } = await _supabase.from('scenes').select('*').order('order');
+    scenes = data || [];
+    renderScenes();
+  }
+
+  function renderScenes() {
+    const el = document.getElementById('sceneList');
+    if (!scenes.length) { el.innerHTML = '<div class="empty">씬이 없어요</div>'; return; }
+    el.innerHTML = scenes.map(s => `
+      <div class="list-item">
+        <div class="list-item-info">
+          <div class="list-item-title">${s.title} <span class="badge">${s.stage}</span> <span class="badge blue">순서 ${s.order}</span></div>
+          <div class="list-item-sub">ID: ${s.id} · 배경: ${s.background_url ? '✅' : '❌'} · 캐릭터: ${s.character_url ? '✅' : '❌'}</div>
+        </div>
+        <div class="list-item-actions">
+          <button class="btn btn-red btn-sm" onclick="deleteScene(${s.id})">삭제</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function addScene() {
+    const title = document.getElementById('sc-title').value.trim();
+    const stage = document.getElementById('sc-stage').value;
+    const order = parseInt(document.getElementById('sc-order').value) || 1;
+    const background_url = document.getElementById('sc-bg').value.trim() || null;
+    const character_url = document.getElementById('sc-char').value.trim() || null;
+    if (!title) { alert('씬 제목을 입력해줘요!'); return; }
+    const { error } = await _supabase.from('scenes').insert({ title, stage, order, background_url, character_url });
+    if (error) { alert('추가 실패 😢'); return; }
+    document.getElementById('sc-title').value = '';
+    document.getElementById('sc-bg').value = '';
+    document.getElementById('sc-char').value = '';
+    await loadAll();
+  }
+
+  async function deleteScene(id) {
+    if (!confirm('이 씬을 삭제할까요? 연결된 대사와 선택지도 삭제해야 해요.')) return;
+    await _supabase.from('scenes').delete().eq('id', id);
+    await loadAll();
+  }
+
+  // =====================
+  // 대사
+  // =====================
+  async function loadDialogues() {
+    const filterId = document.getElementById('dl-filter')?.value;
+    let q = _supabase.from('dialogues').select('*').order('scene_id').order('order');
+    if (filterId) q = q.eq('scene_id', filterId);
+    const { data } = await q;
+    dialogues = data || [];
+    renderDialogues();
+  }
+
+  function renderDialogues() {
+    const el = document.getElementById('dialogueList');
+    if (!dialogues.length) { el.innerHTML = '<div class="empty">대사가 없어요</div>'; return; }
+    el.innerHTML = dialogues.map(d => {
+      const sceneName = scenes.find(s => s.id === d.scene_id)?.title || '?';
+      return `
+        <div class="list-item">
+          <div class="list-item-info">
+            <div class="list-item-title">[${d.speaker}] ${d.text.slice(0,40)}${d.text.length>40?'...':''}</div>
+            <div class="list-item-sub">씬: ${sceneName} · 순서: ${d.order}</div>
+          </div>
+          <div class="list-item-actions">
+            <button class="btn btn-red btn-sm" onclick="deleteDialogue(${d.id})">삭제</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  async function addDialogue() {
+    const scene_id = parseInt(document.getElementById('dl-scene').value);
+    const speaker = document.getElementById('dl-speaker').value.trim();
+    const text = document.getElementById('dl-text').value.trim();
+    const order = parseInt(document.getElementById('dl-order').value) || 1;
+    if (!scene_id) { alert('씬을 선택해줘요!'); return; }
+    if (!text) { alert('대사를 입력해줘요!'); return; }
+    const { error } = await _supabase.from('dialogues').insert({ scene_id, speaker, text, order });
+    if (error) { alert('추가 실패 😢'); return; }
+    document.getElementById('dl-text').value = '';
+    await loadAll();
+  }
+
+  async function deleteDialogue(id) {
+    if (!confirm('이 대사를 삭제할까요?')) return;
+    await _supabase.from('dialogues').delete().eq('id', id);
+    await loadAll();
+  }
+
+  // =====================
+  // 선택지
+  // =====================
+  async function loadChoices() {
+    const { data } = await _supabase.from('choices').select('*').order('dialogue_id');
+    choices = data || [];
+    renderChoices();
+  }
+
+  function renderChoices() {
+    const el = document.getElementById('choiceList');
+    if (!choices.length) { el.innerHTML = '<div class="empty">선택지가 없어요</div>'; return; }
+    el.innerHTML = choices.map(c => {
+      const dlg = dialogues.find(d => d.id === c.dialogue_id);
+      const nextScene = scenes.find(s => s.id === c.next_scene_id);
+      const effects = [];
+      if (c.skill_effect) effects.push(`🎤${c.skill_effect>0?'+':''}${c.skill_effect}`);
+      if (c.fame_effect) effects.push(`🌟${c.fame_effect>0?'+':''}${c.fame_effect}`);
+      if (c.fan_effect) effects.push(`👥${c.fan_effect>0?'+':''}${c.fan_effect}`);
+      if (c.money_effect) effects.push(`💰${c.money_effect>0?'+':''}${c.money_effect}`);
+      if (c.hp_effect) effects.push(`❤️${c.hp_effect>0?'+':''}${c.hp_effect}`);
+      return `
+        <div class="list-item">
+          <div class="list-item-info">
+            <div class="list-item-title">"${c.text}"</div>
+            <div class="list-item-sub">대사ID: ${c.dialogue_id} · 다음씬: ${nextScene?.title || '없음'} · ${effects.join(' ')}</div>
+          </div>
+          <div class="list-item-actions">
+            <button class="btn btn-red btn-sm" onclick="deleteChoice(${c.id})">삭제</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  async function addChoice() {
+    const dialogue_id = parseInt(document.getElementById('ch-dialogue').value);
+    const text = document.getElementById('ch-text').value.trim();
+    const next_scene_id = parseInt(document.getElementById('ch-next-scene').value) || null;
+    const skill_effect = parseInt(document.getElementById('ch-skill').value) || 0;
+    const fame_effect = parseInt(document.getElementById('ch-fame').value) || 0;
+    const fan_effect = parseInt(document.getElementById('ch-fan').value) || 0;
+    const money_effect = parseInt(document.getElementById('ch-money').value) || 0;
+    const hp_effect = parseInt(document.getElementById('ch-hp').value) || 0;
+    if (!dialogue_id) { alert('대사를 선택해줘요!'); return; }
+    if (!text) { alert('선택지 텍스트를 입력해줘요!'); return; }
+    const { error } = await _supabase.from('choices').insert({
+      dialogue_id, text, next_scene_id,
+      skill_effect, fame_effect, fan_effect, money_effect, hp_effect
+    });
+    if (error) { alert('추가 실패 😢'); return; }
+    document.getElementById('ch-text').value = '';
+    await loadAll();
+  }
+
+  async function deleteChoice(id) {
+    if (!confirm('이 선택지를 삭제할까요?')) return;
+    await _supabase.from('choices').delete().eq('id', id);
+    await loadAll();
+  }
+
+  // =====================
+  // 셀렉트 채우기
+  // =====================
+  function populateSelects() {
+    const sceneOpts = scenes.map(s => `<option value="${s.id}">${s.title} (${s.stage})</option>`).join('');
+    const sceneOptsWithEmpty = '<option value="">없음</option>' + sceneOpts;
+    const dlgOpts = dialogues.map(d => {
+      const sName = scenes.find(s => s.id === d.scene_id)?.title || '?';
+      return `<option value="${d.id}">[${sName}] ${d.text.slice(0,30)}</option>`;
+    }).join('');
+
+    document.getElementById('dl-scene').innerHTML = sceneOpts;
+    document.getElementById('dl-filter').innerHTML = '<option value="">전체</option>' + sceneOpts;
+    document.getElementById('ch-dialogue').innerHTML = dlgOpts;
+    document.getElementById('ch-next-scene').innerHTML = sceneOptsWithEmpty;
+    document.getElementById('pv-scene').innerHTML = sceneOpts;
+  }
+
+  // =====================
+  // 미리보기
+  // =====================
+  async function loadPreview() {
+    const sceneId = parseInt(document.getElementById('pv-scene').value);
+    if (!sceneId) return;
+    const scene = scenes.find(s => s.id === sceneId);
+    const sceneDlgs = dialogues.filter(d => d.scene_id === sceneId).sort((a,b) => a.order - b.order);
+    const el = document.getElementById('previewArea');
+
+    el.innerHTML = `
+      <div style="position:relative;border-radius:12px;overflow:hidden;margin-bottom:12px;background:#333;height:200px;background-image:url(${scene.background_url||''});background-size:cover;background-position:center;">
+        ${scene.character_url ? `<img src="${scene.character_url}" style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);height:180px;object-fit:contain;">` : ''}
+      </div>
+      <div style="background:#fffde7;border-radius:12px;padding:14px;border:2px solid #ffeb3b;">
+        <div style="font-size:11px;color:#888;margin-bottom:8px;">씬: ${scene.title} | 스테이지: ${scene.stage}</div>
+        ${sceneDlgs.map(d => {
+          const dlgChoices = choices.filter(c => c.dialogue_id === d.id);
+          return `
+            <div style="margin-bottom:10px;padding:8px;background:#fff;border-radius:8px;border:1px solid #eee;">
+              <div style="font-size:11px;color:#5a8a5a;font-weight:700;margin-bottom:4px;">${d.speaker || '나레이션'}</div>
+              <div style="font-size:13px;color:#333;">${d.text}</div>
+              ${dlgChoices.length ? `
+                <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+                  ${dlgChoices.map(c => `
+                    <div style="padding:4px 10px;background:#5a8a5a;color:#fff;border-radius:999px;font-size:11px;">${c.text}</div>
+                  `).join('')}
+                </div>` : ''}
+            </div>`;
+        }).join('')}
+        ${!sceneDlgs.length ? '<div class="empty">이 씬에 대사가 없어요</div>' : ''}
+      </div>
+    `;
+  }
+</script>
+</body>
+</html>
