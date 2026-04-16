@@ -3,121 +3,100 @@
 <head>
   <meta charset="UTF-8"/>
   <title>래퍼남친 똥끼몽</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
 
     body{
-      background:#1a1a1a;
+      background:#000;
       font-family:'Jua',sans-serif;
-      min-height:100vh;
+      height:100vh;
+      overflow:hidden;
       display:flex;
-      flex-direction:column;
-      align-items:center;
       justify-content:center;
     }
 
     .game-wrap{
       width:100%;
       max-width:480px;
-      min-height:100vh;
-      display:flex;
-      flex-direction:column;
+      height:100vh;
       position:relative;
-      background:#000;
       overflow:hidden;
+      background:#111;
     }
 
-    /* 스탯 바 */
-    .stat-bar{
-      position:absolute;
-      top:0;left:0;right:0;
-      z-index:20;
-      background:linear-gradient(to bottom,rgba(0,0,0,0.7),transparent);
-      padding:10px 14px 20px;
-    }
-    .stat-row-top{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-bottom:6px;
-    }
-    .stage-badge{
-      font-size:11px;
-      color:#fff;
-      background:rgba(90,138,90,0.8);
-      padding:3px 10px;
-      border-radius:999px;
-    }
-    .day-badge{
-      font-size:11px;
-      color:#fffc6e;
-    }
-    .stats-mini{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-    }
-    .stat-mini-item{
-      display:flex;
-      align-items:center;
-      gap:3px;
-      font-size:10px;
-      color:#fff;
-    }
-    .stat-mini-bar{
-      width:40px;
-      height:5px;
-      background:rgba(255,255,255,0.2);
-      border-radius:999px;
-      overflow:hidden;
-    }
-    .stat-mini-fill{
-      height:100%;
-      border-radius:999px;
-      transition:width 0.4s ease;
-    }
-    .fill-hp{background:#ff6b9d;}
-    .fill-skill{background:#6bb5ff;}
-    .fill-fame{background:#ffd700;}
-    .fill-fan{background:#b86bff;}
-
-    /* 배경 + 캐릭터 */
+    /* 배경 */
     .scene-bg{
       position:absolute;
       inset:0;
       background-size:cover;
       background-position:center;
-      transition:background-image 0.5s ease;
+      transition:background-image 0.4s ease;
     }
     .scene-bg-overlay{
       position:absolute;
       inset:0;
-      background:linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.1) 50%, transparent 100%);
+      background:linear-gradient(
+        to bottom,
+        rgba(0,0,0,0.3) 0%,
+        rgba(0,0,0,0.0) 30%,
+        rgba(0,0,0,0.0) 50%,
+        rgba(0,0,0,0.6) 80%,
+        rgba(0,0,0,0.8) 100%
+      );
     }
+
+    /* 캐릭터 */
     .scene-char{
       position:absolute;
-      bottom:180px;
+      bottom:280px;
       left:50%;
       transform:translateX(-50%);
-      max-height:55%;
-      max-width:80%;
+      max-height:60%;
+      max-width:100%;
       object-fit:contain;
       z-index:5;
       transition:opacity 0.3s ease;
-      filter:drop-shadow(0 4px 20px rgba(0,0,0,0.5));
     }
 
-    /* 대화창 */
+    /* 상단 스탯 카드 */
+    .stat-cards{
+      position:absolute;
+      top:16px;
+      left:12px;right:12px;
+      z-index:20;
+      display:flex;
+      gap:8px;
+    }
+    .stat-card{
+      flex:1;
+      background:rgba(255,255,255,0.92);
+      border-radius:12px;
+      padding:8px 10px;
+      display:flex;
+      align-items:center;
+      gap:6px;
+      box-shadow:0 2px 10px rgba(0,0,0,0.25);
+    }
+    .stat-card-icon{font-size:18px;}
+    .stat-card-val{
+      font-size:16px;
+      color:#333;
+      font-weight:700;
+    }
+    .stat-card.money{ flex:1.4; }
+
+    /* 대화창 영역 */
     .dialog-area{
       position:absolute;
       bottom:0;left:0;right:0;
       z-index:10;
-      padding:12px 14px 16px;
+      padding:12px 12px 20px;
+      display:none;
     }
 
-    /* 말풍선 (플레이어) */
+    /* 플레이어 말풍선 */
     .player-bubble{
       display:none;
       justify-content:flex-end;
@@ -125,102 +104,92 @@
     }
     .player-bubble.show{display:flex;}
     .player-bubble-inner{
-      background:#ffeb3b;
-      border-radius:18px 18px 4px 18px;
+      background:rgba(255,235,59,0.95);
+      border-radius:16px 16px 4px 16px;
       padding:8px 14px;
       font-size:13px;
       color:#333;
       max-width:70%;
-      position:relative;
       box-shadow:0 2px 8px rgba(0,0,0,0.3);
     }
 
     /* 캐릭터 대화창 */
     .char-dialog{
-      background:rgba(255,253,230,0.95);
+      background:rgba(245,245,240,0.95);
       border-radius:16px;
-      padding:12px 14px;
+      padding:12px 14px 14px;
       margin-bottom:10px;
-      min-height:80px;
+      cursor:pointer;
       box-shadow:0 4px 20px rgba(0,0,0,0.4);
-      position:relative;
     }
-    .char-name{
+    .char-name-tag{
+      display:inline-block;
+      background:#fff;
+      border-radius:999px;
+      padding:3px 12px;
       font-size:12px;
-      color:#5a8a5a;
+      color:#333;
       font-weight:700;
-      margin-bottom:4px;
+      margin-bottom:8px;
+      box-shadow:0 1px 4px rgba(0,0,0,0.1);
     }
     .char-text{
       font-size:14px;
-      color:#333;
-      line-height:1.6;
-      min-height:40px;
+      color:#222;
+      line-height:1.65;
+      min-height:44px;
     }
     .next-indicator{
-      position:absolute;
-      bottom:8px;right:12px;
-      font-size:16px;
-      color:#5a8a5a;
+      text-align:right;
+      font-size:14px;
+      color:#888;
+      margin-top:4px;
       animation:bounce 1s infinite;
-      cursor:pointer;
     }
     @keyframes bounce{
       0%,100%{transform:translateY(0);}
-      50%{transform:translateY(4px);}
+      50%{transform:translateY(3px);}
     }
 
-    /* 선택지 */
+    /* 선택지 버튼 */
     .choices-wrap{
       display:flex;
-      flex-direction:column;
-      gap:6px;
+      gap:8px;
     }
     .choice-btn{
-      background:rgba(255,255,255,0.92);
-      border:2px solid #c8e6c9;
-      border-radius:12px;
-      padding:10px 14px;
+      flex:1;
+      background:rgba(0,0,0,0.6);
+      border:none;
+      border-radius:14px;
+      padding:14px 10px;
       font-family:'Jua',sans-serif;
-      font-size:13px;
-      color:#333;
+      font-size:14px;
+      color:#fff;
       cursor:pointer;
-      text-align:left;
+      text-align:center;
       transition:all 0.15s;
-      box-shadow:0 2px 8px rgba(0,0,0,0.2);
+      box-shadow:0 2px 10px rgba(0,0,0,0.3);
+      backdrop-filter:blur(4px);
     }
-    .choice-btn:hover{
-      background:#e8f5e9;
-      border-color:#5a8a5a;
-      transform:translateY(-1px);
-    }
-    .choice-btn:active{transform:scale(0.98);}
+    .choice-btn:hover{background:rgba(0,0,0,0.8);transform:translateY(-2px);}
+    .choice-btn:active{transform:scale(0.97);}
 
     /* 로딩 */
     .loading-screen{
       position:absolute;
       inset:0;
-      background:#1a2a1a;
+      background:#0a0a0a;
       display:flex;
       flex-direction:column;
       align-items:center;
       justify-content:center;
       z-index:100;
-      gap:16px;
+      gap:14px;
     }
-    .loading-title{
-      font-size:20px;
-      color:#5a8a5a;
-      text-shadow:0 0 10px rgba(90,138,90,0.5);
-    }
-    .loading-sub{font-size:13px;color:#888;}
-    .loading-dot{
-      display:flex;gap:6px;
-    }
+    .loading-title{font-size:20px;color:#fff;}
+    .loading-dot{display:flex;gap:6px;}
     .loading-dot span{
-      width:8px;height:8px;
-      background:#5a8a5a;
-      border-radius:50%;
+      width:8px;height:8px;background:#fff;border-radius:50%;
       animation:dotBounce 1.2s infinite;
     }
     .loading-dot span:nth-child(2){animation-delay:0.2s;}
@@ -230,43 +199,60 @@
       50%{transform:translateY(-8px);opacity:1;}
     }
 
-    /* 시작 화면 */
+    /* 온보딩 */
     .start-screen{
       position:absolute;
       inset:0;
-      background:linear-gradient(135deg,#1a2a1a,#0a1a0a);
-      display:flex;
+      background:linear-gradient(160deg,#111 0%,#1a1a1a 100%);
+      display:none;
       flex-direction:column;
       align-items:center;
       justify-content:center;
       z-index:90;
-      gap:16px;
-      padding:24px;
+      gap:20px;
+      padding:32px 24px;
     }
     .start-title{
-      font-size:24px;
-      color:#5a8a5a;
-      text-shadow:0 0 20px rgba(90,138,90,0.6);
+      font-size:22px;
+      color:#fff;
       text-align:center;
+      line-height:1.4;
     }
     .start-sub{font-size:13px;color:#888;text-align:center;line-height:1.7;}
-    .start-btn{
-      padding:14px 32px;
-      background:linear-gradient(135deg,#5a8a5a,#4a7a4a);
-      border:none;
+    .nickname-input{
+      width:100%;
+      max-width:280px;
+      padding:14px 18px;
       border-radius:999px;
+      border:2px solid #333;
+      background:#1a1a1a;
       color:#fff;
       font-family:'Jua',sans-serif;
       font-size:16px;
-      cursor:pointer;
-      box-shadow:0 4px 20px rgba(90,138,90,0.4);
+      text-align:center;
+      outline:none;
     }
-    .start-btn:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(90,138,90,0.6);}
+    .nickname-input:focus{border-color:#fff;}
+    .nickname-input::placeholder{color:#555;}
+    .start-btn{
+      width:100%;
+      max-width:280px;
+      padding:14px;
+      background:#fff;
+      border:none;
+      border-radius:14px;
+      color:#111;
+      font-family:'Jua',sans-serif;
+      font-size:16px;
+      cursor:pointer;
+      font-weight:700;
+    }
+    .start-btn:hover{background:#eee;}
 
-    /* 스탯 변화 토스트 */
+    /* 스탯 토스트 */
     .stat-toast{
       position:absolute;
-      top:80px;right:14px;
+      top:90px;right:14px;
       z-index:50;
       display:flex;
       flex-direction:column;
@@ -274,7 +260,7 @@
       pointer-events:none;
     }
     .toast-item{
-      background:rgba(0,0,0,0.7);
+      background:rgba(0,0,0,0.75);
       color:#fff;
       font-size:11px;
       padding:3px 10px;
@@ -287,7 +273,7 @@
       100%{opacity:0;transform:translateY(-30px);}
     }
 
-    /* 게임오버 / 엔딩 */
+    /* 결과 화면 */
     .result-screen{
       display:none;
       position:absolute;
@@ -311,24 +297,20 @@
     .result-title{font-size:18px;color:#333;margin-bottom:8px;}
     .result-msg{font-size:12px;color:#888;line-height:1.8;margin-bottom:20px;}
     .result-btn{
-      padding:10px 24px;
+      padding:12px 28px;
       border:none;
       border-radius:999px;
-      background:#5a8a5a;
+      background:#111;
       color:#fff;
       font-family:'Jua',sans-serif;
       font-size:14px;
       cursor:pointer;
     }
 
-    /* 타이핑 효과 커서 */
     .typing-cursor{
-      display:inline-block;
-      width:2px;height:14px;
-      background:#5a8a5a;
-      margin-left:2px;
-      animation:blink 0.7s infinite;
-      vertical-align:middle;
+      display:inline-block;width:2px;height:13px;
+      background:#555;margin-left:2px;
+      animation:blink 0.7s infinite;vertical-align:middle;
     }
     @keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
   </style>
@@ -340,22 +322,14 @@
   <div class="loading-screen" id="loadingScreen">
     <div class="loading-title">🎤 래퍼남친 똥끼몽</div>
     <div class="loading-dot"><span></span><span></span><span></span></div>
-    <div class="loading-sub">불러오는 중...</div>
   </div>
 
-  <!-- 온보딩 화면 -->
-  <div class="start-screen" id="startScreen" style="display:none;">
-    <div class="start-title">🎤 래퍼남친 똥끼몽</div>
-    <div class="start-sub" id="startSub">메이슨홈의 래퍼 성장 스토리<br>당신의 선택이 그의 운명을 바꿔요</div>
-    <div id="onboardingBox" style="width:100%;max-width:280px;">
-      <div style="font-size:13px;color:#aaa;text-align:center;margin-bottom:8px;">당신의 이름을 알려줘요</div>
-      <input type="text" id="nicknameInput"
-        style="width:100%;padding:12px 16px;border-radius:999px;border:2px solid #5a8a5a;
-        background:rgba(255,255,255,0.1);color:#fff;font-family:'Jua',sans-serif;
-        font-size:16px;text-align:center;outline:none;margin-bottom:12px;"
-        placeholder="닉네임 입력" maxlength="8" />
-      <button class="start-btn" style="width:100%" onclick="startGame()">▶ 시작하기</button>
-    </div>
+  <!-- 온보딩 -->
+  <div class="start-screen" id="startScreen">
+    <div class="start-title">🎤 래퍼남친<br>똥끼몽</div>
+    <div class="start-sub">메이슨홈의 래퍼 성장 스토리<br>당신의 선택이 그의 운명을 바꿔요</div>
+    <input type="text" class="nickname-input" id="nicknameInput" placeholder="이름을 입력해줘요" maxlength="8" />
+    <button class="start-btn" onclick="startGame()">▶ 시작하기</button>
   </div>
 
   <!-- 배경 -->
@@ -365,30 +339,19 @@
   <!-- 캐릭터 -->
   <img class="scene-char" id="sceneChar" src="" style="display:none;" />
 
-  <!-- 스탯 바 -->
-  <div class="stat-bar" id="statBar" style="display:none;">
-    <div class="stat-row-top">
-      <div class="stage-badge" id="stageBadge">📚 학생</div>
-      <div class="day-badge" id="dayBadge">D+1</div>
+  <!-- 상단 스탯 카드 -->
+  <div class="stat-cards" id="statCards" style="display:none;">
+    <div class="stat-card">
+      <span class="stat-card-icon">❤️</span>
+      <span class="stat-card-val" id="val-like">0</span>
     </div>
-    <div class="stats-mini">
-      <div class="stat-mini-item">
-        ❤️
-        <div class="stat-mini-bar"><div class="stat-mini-fill fill-hp" id="fill-hp" style="width:100%"></div></div>
-      </div>
-      <div class="stat-mini-item">
-        🎤
-        <div class="stat-mini-bar"><div class="stat-mini-fill fill-skill" id="fill-skill" style="width:0%"></div></div>
-      </div>
-      <div class="stat-mini-item">
-        🌟
-        <div class="stat-mini-bar"><div class="stat-mini-fill fill-fame" id="fill-fame" style="width:0%"></div></div>
-      </div>
-      <div class="stat-mini-item">
-        👥
-        <div class="stat-mini-bar"><div class="stat-mini-fill fill-fan" id="fill-fan" style="width:0%"></div></div>
-      </div>
-      <div class="stat-mini-item" id="money-display" style="color:#fffc6e;">💰 <span id="moneyText">0</span></div>
+    <div class="stat-card">
+      <span class="stat-card-icon">⭐</span>
+      <span class="stat-card-val" id="val-skill">0</span>
+    </div>
+    <div class="stat-card money">
+      <span class="stat-card-icon">💰</span>
+      <span class="stat-card-val" id="val-money">1,000</span>
     </div>
   </div>
 
@@ -396,14 +359,14 @@
   <div class="stat-toast" id="statToast"></div>
 
   <!-- 대화창 -->
-  <div class="dialog-area" id="dialogArea" style="display:none;">
+  <div class="dialog-area" id="dialogArea">
     <div class="player-bubble" id="playerBubble">
       <div class="player-bubble-inner" id="playerBubbleText"></div>
     </div>
-    <div class="char-dialog" id="charDialog">
-      <div class="char-name" id="charName">메이슨홈</div>
+    <div class="char-dialog" id="charDialog" onclick="nextDialogue()">
+      <div class="char-name-tag" id="charName">메이슨홈</div>
       <div class="char-text" id="charText"></div>
-      <div class="next-indicator" id="nextIndicator" onclick="nextDialogue()" style="display:none;">▼</div>
+      <div class="next-indicator" id="nextIndicator" style="display:none;">▼</div>
     </div>
     <div class="choices-wrap" id="choicesWrap"></div>
   </div>
@@ -424,7 +387,7 @@
       <div class="result-emoji">👑</div>
       <div class="result-title" id="endingTitle">레전드가 되다</div>
       <div class="result-msg" id="endingMsg"></div>
-      <button class="result-btn" style="background:#ffd700;color:#333;" onclick="restartGame()">처음부터</button>
+      <button class="result-btn" onclick="restartGame()">처음부터</button>
     </div>
   </div>
 </div>
@@ -436,56 +399,51 @@
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndzZnBsbnVnZmF6cnF5bHVwampiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MTMxMTYsImV4cCI6MjA5MTI4OTExNn0.Aa8nzxI182YgUWU3GoJ4kjiqq-nUeUfY7JxG27BlQYY'
   );
 
-  // ========================
-  // 게임 상태
-  // ========================
   let allScenes = [], allDialogues = [], allChoices = [];
-  let currentScene = null;
-  let currentDialogues = [];
-  let currentDlgIdx = 0;
-  let isTyping = false;
-  let typingTimeout = null;
+  let currentScene = null, currentDialogues = [], currentDlgIdx = 0;
+  let isTyping = false, typingTimeout = null;
   let playerName = '당신';
-
-  let stats = { hp:100, skill:0, fame:0, fan:0, money:0, day:1 };
+  let stats = { like:0, skill:0, money:1000, hp:100 };
 
   // ========================
   // 초기화
   // ========================
   async function init() {
-    const { data: scenes } = await _supabase.from('scenes').select('*').order('order');
-    const { data: dialogues } = await _supabase.from('dialogues').select('*').order('scene_id').order('order');
-    const { data: choices } = await _supabase.from('choices').select('*').order('dialogue_id');
-    allScenes = scenes || [];
-    allDialogues = dialogues || [];
-    allChoices = choices || [];
-
+    const [{ data: sc }, { data: dl }, { data: ch }] = await Promise.all([
+      _supabase.from('scenes').select('*').order('order'),
+      _supabase.from('dialogues').select('*').order('scene_id').order('order'),
+      _supabase.from('choices').select('*').order('dialogue_id'),
+    ]);
+    allScenes = sc || [];
+    allDialogues = dl || [];
+    allChoices = ch || [];
     document.getElementById('loadingScreen').style.display = 'none';
-
-    if (!allScenes.length) {
-      document.getElementById('startScreen').style.display = 'flex';
-      document.querySelector('.start-sub').textContent = '아직 스토리가 없어요.\n어드민에서 씬을 추가해줘요!';
-      return;
-    }
     document.getElementById('startScreen').style.display = 'flex';
   }
 
+  // ========================
+  // 시작
+  // ========================
   function startGame() {
-    const input = document.getElementById('nicknameInput').value.trim();
-    playerName = input || '당신';
+    playerName = document.getElementById('nicknameInput').value.trim() || '당신';
     document.getElementById('startScreen').style.display = 'none';
-    document.getElementById('statBar').style.display = 'block';
+    document.getElementById('statCards').style.display = 'flex';
     document.getElementById('dialogArea').style.display = 'block';
-    loadScene(allScenes[0].id);
+    updateStatUI();
+    if (allScenes.length) loadScene(allScenes[0].id);
   }
 
+  document.getElementById('nicknameInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') startGame();
+  });
+
   function restartGame() {
-    stats = { hp:100, skill:0, fame:0, fan:0, money:0, day:1 };
+    stats = { like:0, skill:0, money:1000, hp:100 };
     document.getElementById('gameoverScreen').classList.remove('show');
     document.getElementById('endingScreen').classList.remove('show');
     document.getElementById('playerBubble').classList.remove('show');
     updateStatUI();
-    loadScene(allScenes[0].id);
+    if (allScenes.length) loadScene(allScenes[0].id);
   }
 
   // ========================
@@ -495,11 +453,9 @@
     currentScene = allScenes.find(s => s.id === sceneId);
     if (!currentScene) { showEnding(); return; }
 
-    // 배경
-    const bg = document.getElementById('sceneBg');
-    bg.style.backgroundImage = currentScene.background_url ? `url(${currentScene.background_url})` : 'linear-gradient(135deg,#1a2a1a,#0a1a0a)';
+    document.getElementById('sceneBg').style.backgroundImage =
+      currentScene.background_url ? `url(${currentScene.background_url})` : 'linear-gradient(135deg,#111,#222)';
 
-    // 캐릭터
     const char = document.getElementById('sceneChar');
     if (currentScene.character_url) {
       char.src = currentScene.character_url;
@@ -508,27 +464,16 @@
       char.style.display = 'none';
     }
 
-    // 스테이지 배지
-    document.getElementById('stageBadge').textContent = stageEmoji(currentScene.stage) + ' ' + currentScene.stage;
-
-    // 대사 로드
     currentDialogues = allDialogues.filter(d => d.scene_id === sceneId).sort((a,b) => a.order - b.order);
     currentDlgIdx = 0;
-
     document.getElementById('playerBubble').classList.remove('show');
     document.getElementById('choicesWrap').innerHTML = '';
     document.getElementById('nextIndicator').style.display = 'none';
-
     if (currentDialogues.length) showDialogue(0);
   }
 
-  function stageEmoji(stage) {
-    const m = {'학생':'📚','언더':'🎤','쇼미':'🏆','메이저':'🎵','레전드':'👑'};
-    return m[stage] || '🌿';
-  }
-
   // ========================
-  // 대사 표시
+  // 대사
   // ========================
   function showDialogue(idx) {
     if (idx >= currentDialogues.length) return;
@@ -541,76 +486,54 @@
     document.getElementById('choicesWrap').innerHTML = '';
     document.getElementById('nextIndicator').style.display = 'none';
 
-    // 타이핑 효과
     typeText(dlg.text, () => {
-      if (dlgChoices.length) {
-        showChoices(dlgChoices);
-      } else if (isLast) {
-        // 마지막 대사인데 선택지 없으면 씬 끝
-        document.getElementById('nextIndicator').style.display = 'none';
-      } else {
-        document.getElementById('nextIndicator').style.display = 'block';
-      }
+      if (dlgChoices.length) showChoices(dlgChoices);
+      else if (!isLast) document.getElementById('nextIndicator').style.display = 'block';
     });
   }
 
-  function typeText(text, callback) {
-    // {name} → 플레이어 닉네임으로 교체
+  function typeText(text, cb) {
     text = text.replace(/\{name\}/g, playerName);
     const el = document.getElementById('charText');
     el.innerHTML = '';
     isTyping = true;
     let i = 0;
     clearTimeout(typingTimeout);
-
     function type() {
       if (i < text.length) {
-        el.innerHTML = text.slice(0, i+1) + '<span class="typing-cursor"></span>';
+        el.innerHTML = text.slice(0,i+1) + '<span class="typing-cursor"></span>';
         i++;
-        typingTimeout = setTimeout(type, 35);
+        typingTimeout = setTimeout(type, 32);
       } else {
         el.innerHTML = text;
         isTyping = false;
-        if (callback) callback();
+        if (cb) cb();
       }
     }
     type();
   }
 
   function nextDialogue() {
+    if (document.getElementById('choicesWrap').children.length > 0) return;
     if (isTyping) {
-      // 타이핑 스킵
       clearTimeout(typingTimeout);
       const dlg = currentDialogues[currentDlgIdx];
-      document.getElementById('charText').textContent = dlg.text;
+      document.getElementById('charText').textContent = dlg.text.replace(/\{name\}/g, playerName);
       isTyping = false;
       const dlgChoices = allChoices.filter(c => c.dialogue_id === dlg.id);
-      if (dlgChoices.length) {
-        showChoices(dlgChoices);
-      } else {
-        document.getElementById('nextIndicator').style.display = 'block';
-      }
+      if (dlgChoices.length) showChoices(dlgChoices);
+      else document.getElementById('nextIndicator').style.display = 'block';
       return;
     }
     showDialogue(currentDlgIdx + 1);
   }
 
-  // 화면 탭으로 다음 대사
-  document.getElementById('charDialog').addEventListener('click', (e) => {
-    if (e.target.id === 'nextIndicator') return;
-    if (document.getElementById('choicesWrap').children.length > 0) return;
-    nextDialogue();
-  });
-
   // ========================
   // 선택지
   // ========================
   function showChoices(choices) {
-    const wrap = document.getElementById('choicesWrap');
-    wrap.innerHTML = choices.map(c => `
-      <button class="choice-btn" onclick="selectChoice(${c.id})">
-        ${c.text}
-      </button>
+    document.getElementById('choicesWrap').innerHTML = choices.map(c => `
+      <button class="choice-btn" onclick="selectChoice(${c.id})">${c.text}</button>
     `).join('');
   }
 
@@ -618,36 +541,24 @@
     const choice = allChoices.find(c => c.id === choiceId);
     if (!choice) return;
 
-    // 선택한 내용 말풍선으로 표시
-    const bubble = document.getElementById('playerBubble');
     document.getElementById('playerBubbleText').textContent = choice.text;
-    bubble.classList.add('show');
-
-    // 선택지 숨기기
+    document.getElementById('playerBubble').classList.add('show');
     document.getElementById('choicesWrap').innerHTML = '';
 
-    // 스탯 효과
     applyStats(choice);
 
-    // 체력 0 체크
     if (stats.hp <= 0) {
       setTimeout(() => {
-        document.getElementById('gameoverMsg').innerHTML =
-          `D+${stats.day}일 만에 포기했다...<br><br>메이슨홈은 결국 편의점 알바를 시작했다.`;
+        document.getElementById('gameoverMsg').innerHTML = `D+몇일 만에 포기했다...<br><br>메이슨홈은 결국 편의점 알바를 시작했다.`;
         document.getElementById('gameoverScreen').classList.add('show');
       }, 800);
       return;
     }
 
-    // 다음 씬으로 이동
     setTimeout(() => {
-      bubble.classList.remove('show');
-      if (choice.next_scene_id) {
-        loadScene(choice.next_scene_id);
-      } else {
-        // 다음 씬 없으면 엔딩
-        showEnding();
-      }
+      document.getElementById('playerBubble').classList.remove('show');
+      if (choice.next_scene_id) loadScene(choice.next_scene_id);
+      else showEnding();
     }, 800);
   }
 
@@ -656,23 +567,18 @@
   // ========================
   function applyStats(choice) {
     const effects = [];
-    if (choice.skill_effect) { stats.skill = Math.min(100, Math.max(0, stats.skill + choice.skill_effect)); effects.push(`🎤${choice.skill_effect>0?'+':''}${choice.skill_effect}`); }
-    if (choice.fame_effect) { stats.fame = Math.min(100, Math.max(0, stats.fame + choice.fame_effect)); effects.push(`🌟${choice.fame_effect>0?'+':''}${choice.fame_effect}`); }
-    if (choice.fan_effect) { stats.fan = Math.min(100, Math.max(0, stats.fan + choice.fan_effect)); effects.push(`👥${choice.fan_effect>0?'+':''}${choice.fan_effect}`); }
+    if (choice.fan_effect) { stats.like = Math.min(999, Math.max(0, stats.like + choice.fan_effect)); effects.push(`❤️${choice.fan_effect>0?'+':''}${choice.fan_effect}`); }
+    if (choice.skill_effect) { stats.skill = Math.min(999, Math.max(0, stats.skill + choice.skill_effect)); effects.push(`⭐${choice.skill_effect>0?'+':''}${choice.skill_effect}`); }
     if (choice.money_effect) { stats.money = Math.max(0, stats.money + choice.money_effect); effects.push(`💰${choice.money_effect>0?'+':''}${choice.money_effect}`); }
-    if (choice.hp_effect) { stats.hp = Math.min(100, Math.max(0, stats.hp + choice.hp_effect)); effects.push(`❤️${choice.hp_effect>0?'+':''}${choice.hp_effect}`); }
-
+    if (choice.hp_effect) { stats.hp = Math.min(100, Math.max(0, stats.hp + choice.hp_effect)); }
     updateStatUI();
     if (effects.length) showToast(effects);
   }
 
   function updateStatUI() {
-    document.getElementById('fill-hp').style.width = stats.hp + '%';
-    document.getElementById('fill-skill').style.width = stats.skill + '%';
-    document.getElementById('fill-fame').style.width = stats.fame + '%';
-    document.getElementById('fill-fan').style.width = stats.fan + '%';
-    document.getElementById('moneyText').textContent = stats.money.toLocaleString() + '원';
-    document.getElementById('dayBadge').textContent = 'D+' + stats.day;
+    document.getElementById('val-like').textContent = stats.like;
+    document.getElementById('val-skill').textContent = stats.skill;
+    document.getElementById('val-money').textContent = stats.money.toLocaleString();
   }
 
   function showToast(effects) {
@@ -692,18 +598,14 @@
   // 엔딩
   // ========================
   function showEnding() {
-    document.getElementById('endingTitle').textContent = stats.skill >= 80 ? '👑 레전드가 되다!' : '🎤 래퍼의 이야기';
+    document.getElementById('endingTitle').textContent = stats.like >= 50 ? '💕 해피엔딩!' : '🎤 래퍼의 이야기';
     document.getElementById('endingMsg').innerHTML =
-      `메이슨홈의 여정이 끝났어요.<br><br>` +
-      `🎤 실력: ${Math.floor(stats.skill)} · 🌟 명성: ${Math.floor(stats.fame)}<br>` +
-      `👥 팬: ${Math.floor(stats.fan)} · 💰 ${stats.money.toLocaleString()}원<br><br>` +
-      `D+${stats.day}일간의 이야기`;
+      `메이슨홈의 이야기가 끝났어요.<br><br>` +
+      `❤️ 호감도: ${stats.like} · ⭐ 실력: ${stats.skill}<br>` +
+      `💰 ${stats.money.toLocaleString()}원`;
     document.getElementById('endingScreen').classList.add('show');
   }
 
-  // ========================
-  // 시작
-  // ========================
   init();
 </script>
 </body>
