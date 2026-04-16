@@ -335,7 +335,7 @@
   <!-- 온보딩 -->
   <div class="start-screen" id="startScreen">
     <div class="start-title">🎤 래퍼남친<br>똥끼몽</div>
-    <div class="start-sub">메이슨홈의 래퍼 성장 스토리<br>당신의 선택이 그의 운명을 바꿔요</div>
+    <div class="start-sub">래퍼여친이 되고싶은 나?!<br>까탈스러운 똥끼몽의 마음을 공... 략... 해봐!</div>
     <input type="text" class="nickname-input" id="nicknameInput" placeholder="이름을 입력해줘요" maxlength="8" />
     <button class="start-btn" onclick="startGame()">▶ 시작하기</button>
   </div>
@@ -606,9 +606,9 @@
   // 엔딩
   // ========================
   function showEnding() {
-    document.getElementById('endingTitle').textContent = stats.like >= 50 ? '💕 해피엔딩!' : '🎤 래퍼의 이야기';
+    document.getElementById('endingTitle').textContent = stats.like >= 50 ? '💕 해피엔딩!' : '래퍼남친 똥끼몽';
     document.getElementById('endingMsg').innerHTML =
-      `메이슨홈의 이야기가 끝났어요.<br><br>` +
+      `메이슨홈이 당신을 손절했어요...<br><br>` +
       `❤️ 호감도: ${stats.like} · ⭐ 실력: ${stats.skill}<br>` +
       `💰 ${stats.money.toLocaleString()}원`;
     document.getElementById('endingScreen').classList.add('show');
