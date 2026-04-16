@@ -16,7 +16,7 @@
     .login-wrap button{width:100%;padding:10px;background:#5a8a5a;border:none;border-radius:8px;color:#fff;font-family:'Jua',sans-serif;font-size:14px;cursor:pointer;}
 
     .admin-wrap{max-width:900px;margin:0 auto;display:none;}
-    .tabs{display:flex;gap:8px;margin-bottom:20px;}
+    .tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
     .tab{padding:8px 16px;border-radius:999px;border:2px solid #ddd;background:#fff;font-family:'Jua',sans-serif;font-size:13px;cursor:pointer;color:#888;}
     .tab.active{background:#5a8a5a;border-color:#5a8a5a;color:#fff;}
 
@@ -42,32 +42,27 @@
     .btn-red:hover{background:#ff5252;}
     .btn-blue{background:#6b9fff;color:#fff;}
     .btn-blue:hover{background:#5a8fff;}
+    .btn-orange{background:#ffaa44;color:#fff;}
+    .btn-orange:hover{background:#ff9933;}
     .btn-sm{padding:4px 10px;font-size:11px;}
 
     .row{display:flex;gap:8px;align-items:flex-start;}
     .row>*{flex:1;}
 
-    /* 목록 */
     .list-item{
       background:#fafafa;border:1px solid #eee;border-radius:10px;
       padding:10px 12px;margin-bottom:8px;
-      display:flex;align-items:center;justify-content:space-between;gap:8px;
     }
+    .list-item-top{display:flex;align-items:center;justify-content:space-between;gap:8px;}
     .list-item-info{flex:1;}
     .list-item-title{font-size:13px;font-weight:700;color:#333;}
     .list-item-sub{font-size:11px;color:#999;margin-top:2px;}
     .list-item-actions{display:flex;gap:4px;flex-shrink:0;}
 
-    /* 씬 미리보기 */
-    .scene-preview{
-      width:100%;height:120px;border-radius:8px;background:#eee;
-      background-size:cover;background-position:center;
-      margin-bottom:8px;position:relative;overflow:hidden;
-    }
-    .scene-preview-char{
-      position:absolute;bottom:0;left:50%;transform:translateX(-50%);
-      height:100px;object-fit:contain;
-    }
+    /* 수정 폼 */
+    .edit-form{display:none;margin-top:10px;padding:10px;background:#f0f7f0;border-radius:8px;border:1px solid #b8d8b8;}
+    .edit-form.open{display:block;}
+    .edit-form input,.edit-form textarea,.edit-form select{background:#fff;}
 
     .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;background:#e8f5e8;color:#5a8a5a;margin-left:4px;}
     .badge.orange{background:#fff3e0;color:#e67e22;}
@@ -79,24 +74,24 @@
     .stat-row input{width:60px;margin:0;padding:4px 6px;font-size:11px;}
 
     .empty{text-align:center;color:#bbb;padding:20px;font-size:13px;}
-
-    .stage-select-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
-    .stage-btn{padding:4px 10px;border-radius:999px;border:2px solid #ddd;background:#fff;font-size:11px;cursor:pointer;font-family:'Jua',sans-serif;}
-    .stage-btn.active{background:#5a8a5a;border-color:#5a8a5a;color:#fff;}
-
     .notice{background:#e8f5e8;border-radius:8px;padding:10px 12px;font-size:12px;color:#5a8a5a;margin-bottom:14px;}
+
+    /* 선택지 다중 입력 */
+    .choice-group{background:#f9f9f9;border:1px solid #eee;border-radius:10px;padding:12px;margin-bottom:10px;position:relative;}
+    .choice-group-title{font-size:12px;color:#5a8a5a;font-weight:700;margin-bottom:8px;}
+    .choice-group .remove-choice{position:absolute;top:8px;right:8px;background:#ff6b6b;border:none;color:#fff;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer;line-height:20px;text-align:center;padding:0;}
+    .add-choice-btn{width:100%;padding:8px;border:2px dashed #b8d8b8;border-radius:8px;background:transparent;font-family:'Jua',sans-serif;font-size:13px;color:#5a8a5a;cursor:pointer;margin-bottom:10px;}
+    .add-choice-btn:hover{background:#f0f7f0;}
   </style>
 </head>
 <body>
 
-<!-- 로그인 -->
 <div class="login-wrap" id="loginWrap">
   <h2>🌿 똥끼몽 어드민</h2>
   <input type="password" id="pwInput" placeholder="비밀번호" />
   <button onclick="checkLogin()">로그인</button>
 </div>
 
-<!-- 어드민 -->
 <div class="admin-wrap" id="adminWrap">
   <h1>🌿 똥끼몽 어드민</h1>
 
@@ -141,7 +136,6 @@
         <button class="btn btn-blue btn-sm" onclick="uploadImg('bg')">업로드</button>
         <span id="bg-upload-status" style="font-size:11px;color:#888;margin-left:6px;"></span>
       </div>
-
       <label>캐릭터 이미지</label>
       <div style="display:flex;gap:6px;margin-bottom:4px;">
         <button class="btn btn-blue btn-sm" onclick="toggleImgInput('char','url')">🔗 URL</button>
@@ -164,7 +158,7 @@
 
   <!-- 대사 관리 -->
   <div class="tab-panel" id="tab-dialogues">
-    <div class="notice">💡 대사 = 씬 안에서 순서대로 보여지는 텍스트예요. 화자(메이슨홈 or 나레이션 등)를 설정해요.</div>
+    <div class="notice">💡 대사 = 씬 안에서 순서대로 보여지는 텍스트예요.</div>
     <div class="card">
       <div class="card-title">➕ 새 대사 추가</div>
       <label>씬 선택</label>
@@ -183,7 +177,6 @@
       <textarea id="dl-text" placeholder="예) 야... 나 래퍼 될 것 같아. 진짜로."></textarea>
       <button class="btn btn-green" onclick="addDialogue()">대사 추가하기</button>
     </div>
-
     <div class="card">
       <div class="card-title">📋 대사 목록</div>
       <label>씬 필터</label>
@@ -194,28 +187,18 @@
 
   <!-- 선택지 관리 -->
   <div class="tab-panel" id="tab-choices">
-    <div class="notice">💡 선택지 = 대사 마지막에 나오는 버튼이에요. 선택하면 다음 씬으로 이동하고 스탯이 변해요.</div>
+    <div class="notice">💡 선택지 = 대사에 연결된 버튼이에요. 한 번에 여러 개 추가할 수 있어요!</div>
     <div class="card">
-      <div class="card-title">➕ 새 선택지 추가</div>
+      <div class="card-title">➕ 선택지 추가</div>
       <label>연결할 대사 선택</label>
       <select id="ch-dialogue"></select>
-      <label>선택지 텍스트</label>
-      <input type="text" id="ch-text" placeholder="예) 연습할게!" />
-      <label>다음 씬 (선택 후 이동)</label>
-      <select id="ch-next-scene">
-        <option value="">없음 (게임 종료)</option>
-      </select>
-      <div class="card-title" style="margin-top:8px;font-size:12px;">스탯 효과 (양수=증가, 음수=감소)</div>
-      <div class="stat-effects">
-        <div class="stat-row"><label>🎤 실력</label><input type="number" id="ch-skill" value="0" /></div>
-        <div class="stat-row"><label>🌟 명성</label><input type="number" id="ch-fame" value="0" /></div>
-        <div class="stat-row"><label>👥 팬</label><input type="number" id="ch-fan" value="0" /></div>
-        <div class="stat-row"><label>💰 돈</label><input type="number" id="ch-money" value="0" /></div>
-        <div class="stat-row"><label>❤️ 체력</label><input type="number" id="ch-hp" value="0" /></div>
-      </div>
-      <button class="btn btn-green" onclick="addChoice()">선택지 추가하기</button>
-    </div>
 
+      <div id="choiceInputs">
+        <!-- JS로 렌더 -->
+      </div>
+      <button class="add-choice-btn" onclick="addChoiceInput()">+ 선택지 추가</button>
+      <button class="btn btn-green" style="width:100%" onclick="saveChoices()">선택지 저장하기</button>
+    </div>
     <div class="card">
       <div class="card-title">📋 선택지 목록</div>
       <div id="choiceList"><div class="empty">선택지가 없어요</div></div>
@@ -243,45 +226,8 @@
   const ADMIN_PW = '013000';
   const BUCKET = 'dongkki';
   let scenes = [], dialogues = [], choices = [];
+  let choiceCount = 0;
 
-  // 이미지 업로드 탭 토글
-  function toggleImgInput(type, mode) {
-    const urlInput = document.getElementById('sc-' + type);
-    const fileWrap = document.getElementById(type + '-file-wrap');
-    if (mode === 'url') {
-      urlInput.style.display = 'block';
-      fileWrap.style.display = 'none';
-    } else {
-      urlInput.style.display = 'none';
-      fileWrap.style.display = 'block';
-    }
-  }
-
-  // 파일 업로드 (한글 파일명 처리)
-  async function uploadImg(type) {
-    const fileInput = document.getElementById('sc-' + type + '-file');
-    const status = document.getElementById(type + '-upload-status');
-    const file = fileInput.files[0];
-    if (!file) { status.textContent = '파일을 선택해줘요!'; return; }
-
-    status.textContent = '업로드 중...';
-
-    // 한글 파일명 → 타임스탬프로 변경
-    const ext = file.name.split('.').pop();
-    const fileName = type + '_' + Date.now() + '.' + ext;
-
-    const { error } = await _supabase.storage.from(BUCKET).upload(fileName, file);
-    if (error) { status.textContent = '❌ 실패: ' + error.message; return; }
-
-    const { data: urlData } = _supabase.storage.from(BUCKET).getPublicUrl(fileName);
-    document.getElementById('sc-' + type).value = urlData.publicUrl;
-    document.getElementById('sc-' + type).style.display = 'block';
-    document.getElementById(type + '-file-wrap').style.display = 'none';
-    status.textContent = '';
-    fileInput.value = '';
-  }
-
-  // 로그인
   function checkLogin() {
     if (document.getElementById('pwInput').value === ADMIN_PW) {
       document.getElementById('loginWrap').style.display = 'none';
@@ -291,7 +237,6 @@
   }
   document.getElementById('pwInput').addEventListener('keydown', e => { if (e.key === 'Enter') checkLogin(); });
 
-  // 탭
   function switchTab(tab) {
     document.querySelectorAll('.tab').forEach((t,i) => {
       const tabs = ['scenes','dialogues','choices','preview'];
@@ -300,12 +245,39 @@
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.getElementById('tab-' + tab).classList.add('active');
     if (tab === 'preview') loadPreview();
+    if (tab === 'choices') renderChoiceInputs();
   }
 
-  // 전체 로드
   async function loadAll() {
     await Promise.all([loadScenes(), loadDialogues(), loadChoices()]);
     populateSelects();
+    renderChoiceInputs();
+  }
+
+  // =====================
+  // 이미지 업로드
+  // =====================
+  function toggleImgInput(type, mode) {
+    document.getElementById('sc-' + type).style.display = mode === 'url' ? 'block' : 'none';
+    document.getElementById(type + '-file-wrap').style.display = mode === 'file' ? 'block' : 'none';
+  }
+
+  async function uploadImg(type) {
+    const fileInput = document.getElementById('sc-' + type + '-file');
+    const status = document.getElementById(type + '-upload-status');
+    const file = fileInput.files[0];
+    if (!file) { status.textContent = '파일을 선택해줘요!'; return; }
+    status.textContent = '업로드 중...';
+    const ext = file.name.split('.').pop();
+    const fileName = type + '_' + Date.now() + '.' + ext;
+    const { error } = await _supabase.storage.from(BUCKET).upload(fileName, file);
+    if (error) { status.textContent = '❌ ' + error.message; return; }
+    const { data: urlData } = _supabase.storage.from(BUCKET).getPublicUrl(fileName);
+    document.getElementById('sc-' + type).value = urlData.publicUrl;
+    document.getElementById('sc-' + type).style.display = 'block';
+    document.getElementById(type + '-file-wrap').style.display = 'none';
+    status.textContent = '';
+    fileInput.value = '';
   }
 
   // =====================
@@ -322,15 +294,57 @@
     if (!scenes.length) { el.innerHTML = '<div class="empty">씬이 없어요</div>'; return; }
     el.innerHTML = scenes.map(s => `
       <div class="list-item">
-        <div class="list-item-info">
-          <div class="list-item-title">${s.title} <span class="badge">${s.stage}</span> <span class="badge blue">순서 ${s.order}</span></div>
-          <div class="list-item-sub">ID: ${s.id} · 배경: ${s.background_url ? '✅' : '❌'} · 캐릭터: ${s.character_url ? '✅' : '❌'}</div>
+        <div class="list-item-top">
+          <div class="list-item-info">
+            <div class="list-item-title">${s.title} <span class="badge">${s.stage}</span> <span class="badge blue">순서 ${s.order}</span></div>
+            <div class="list-item-sub">ID: ${s.id} · 배경: ${s.background_url?'✅':'❌'} · 캐릭터: ${s.character_url?'✅':'❌'}</div>
+          </div>
+          <div class="list-item-actions">
+            <button class="btn btn-orange btn-sm" onclick="toggleEditScene(${s.id})">수정</button>
+            <button class="btn btn-red btn-sm" onclick="deleteScene(${s.id})">삭제</button>
+          </div>
         </div>
-        <div class="list-item-actions">
-          <button class="btn btn-red btn-sm" onclick="deleteScene(${s.id})">삭제</button>
+        <div class="edit-form" id="edit-scene-${s.id}">
+          <label>제목</label>
+          <input type="text" id="es-title-${s.id}" value="${s.title}" />
+          <div class="row">
+            <div>
+              <label>스테이지</label>
+              <select id="es-stage-${s.id}">
+                ${['학생','언더','쇼미','메이저','레전드'].map(st=>`<option value="${st}" ${s.stage===st?'selected':''}>${st}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label>순서</label>
+              <input type="number" id="es-order-${s.id}" value="${s.order}" />
+            </div>
+          </div>
+          <label>배경 URL</label>
+          <input type="text" id="es-bg-${s.id}" value="${s.background_url||''}" />
+          <label>캐릭터 URL</label>
+          <input type="text" id="es-char-${s.id}" value="${s.character_url||''}" />
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-green btn-sm" onclick="updateScene(${s.id})">저장</button>
+            <button class="btn btn-sm" style="background:#eee;" onclick="toggleEditScene(${s.id})">취소</button>
+          </div>
         </div>
-      </div>
-    `).join('');
+      </div>`).join('');
+  }
+
+  function toggleEditScene(id) {
+    const el = document.getElementById('edit-scene-' + id);
+    el.classList.toggle('open');
+  }
+
+  async function updateScene(id) {
+    const title = document.getElementById('es-title-' + id).value.trim();
+    const stage = document.getElementById('es-stage-' + id).value;
+    const order = parseInt(document.getElementById('es-order-' + id).value) || 1;
+    const background_url = document.getElementById('es-bg-' + id).value.trim() || null;
+    const character_url = document.getElementById('es-char-' + id).value.trim() || null;
+    const { error } = await _supabase.from('scenes').update({ title, stage, order, background_url, character_url }).eq('id', id);
+    if (error) { alert('수정 실패 😢'); return; }
+    await loadAll();
   }
 
   async function addScene() {
@@ -349,7 +363,7 @@
   }
 
   async function deleteScene(id) {
-    if (!confirm('이 씬을 삭제할까요? 연결된 대사와 선택지도 삭제해야 해요.')) return;
+    if (!confirm('이 씬을 삭제할까요?')) return;
     await _supabase.from('scenes').delete().eq('id', id);
     await loadAll();
   }
@@ -373,15 +387,44 @@
       const sceneName = scenes.find(s => s.id === d.scene_id)?.title || '?';
       return `
         <div class="list-item">
-          <div class="list-item-info">
-            <div class="list-item-title">[${d.speaker}] ${d.text.slice(0,40)}${d.text.length>40?'...':''}</div>
-            <div class="list-item-sub">씬: ${sceneName} · 순서: ${d.order}</div>
+          <div class="list-item-top">
+            <div class="list-item-info">
+              <div class="list-item-title">[${d.speaker||'나레이션'}] ${d.text.slice(0,40)}${d.text.length>40?'...':''}</div>
+              <div class="list-item-sub">씬: ${sceneName} · 순서: ${d.order}</div>
+            </div>
+            <div class="list-item-actions">
+              <button class="btn btn-orange btn-sm" onclick="toggleEditDialogue(${d.id})">수정</button>
+              <button class="btn btn-red btn-sm" onclick="deleteDialogue(${d.id})">삭제</button>
+            </div>
           </div>
-          <div class="list-item-actions">
-            <button class="btn btn-red btn-sm" onclick="deleteDialogue(${d.id})">삭제</button>
+          <div class="edit-form" id="edit-dlg-${d.id}">
+            <label>화자</label>
+            <input type="text" id="ed-speaker-${d.id}" value="${d.speaker||''}" />
+            <label>순서</label>
+            <input type="number" id="ed-order-${d.id}" value="${d.order}" />
+            <label>대사</label>
+            <textarea id="ed-text-${d.id}">${d.text}</textarea>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-green btn-sm" onclick="updateDialogue(${d.id})">저장</button>
+              <button class="btn btn-sm" style="background:#eee;" onclick="toggleEditDialogue(${d.id})">취소</button>
+            </div>
           </div>
         </div>`;
     }).join('');
+  }
+
+  function toggleEditDialogue(id) {
+    document.getElementById('edit-dlg-' + id).classList.toggle('open');
+  }
+
+  async function updateDialogue(id) {
+    const speaker = document.getElementById('ed-speaker-' + id).value.trim();
+    const order = parseInt(document.getElementById('ed-order-' + id).value) || 1;
+    const text = document.getElementById('ed-text-' + id).value.trim();
+    if (!text) { alert('대사를 입력해줘요!'); return; }
+    const { error } = await _supabase.from('dialogues').update({ speaker, order, text }).eq('id', id);
+    if (error) { alert('수정 실패 😢'); return; }
+    await loadAll();
   }
 
   async function addDialogue() {
@@ -404,8 +447,81 @@
   }
 
   // =====================
-  // 선택지
+  // 선택지 (다중 입력)
   // =====================
+  function renderChoiceInputs() {
+    const container = document.getElementById('choiceInputs');
+    if (!container) return;
+    if (container.children.length === 0) addChoiceInput();
+  }
+
+  function addChoiceInput() {
+    choiceCount++;
+    const idx = choiceCount;
+    const sceneOpts = '<option value="">없음 (게임 종료)</option>' +
+      scenes.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
+    const div = document.createElement('div');
+    div.className = 'choice-group';
+    div.id = 'cg-' + idx;
+    div.innerHTML = `
+      <div class="choice-group-title">선택지 ${idx}</div>
+      <button class="remove-choice" onclick="removeChoiceInput(${idx})">✕</button>
+      <label>선택지 텍스트</label>
+      <input type="text" id="cg-text-${idx}" placeholder="예) 연습할게!" />
+      <label>다음 씬</label>
+      <select id="cg-next-${idx}">${sceneOpts}</select>
+      <div style="font-size:11px;color:#888;margin-bottom:6px;">스탯 효과</div>
+      <div class="stat-effects">
+        <div class="stat-row"><label>🎤</label><input type="number" id="cg-skill-${idx}" value="0" /></div>
+        <div class="stat-row"><label>🌟</label><input type="number" id="cg-fame-${idx}" value="0" /></div>
+        <div class="stat-row"><label>👥</label><input type="number" id="cg-fan-${idx}" value="0" /></div>
+        <div class="stat-row"><label>💰</label><input type="number" id="cg-money-${idx}" value="0" /></div>
+        <div class="stat-row"><label>❤️</label><input type="number" id="cg-hp-${idx}" value="0" /></div>
+      </div>`;
+    document.getElementById('choiceInputs').appendChild(div);
+  }
+
+  function removeChoiceInput(idx) {
+    const el = document.getElementById('cg-' + idx);
+    if (el) el.remove();
+  }
+
+  async function saveChoices() {
+    const dialogue_id = parseInt(document.getElementById('ch-dialogue').value);
+    if (!dialogue_id) { alert('대사를 선택해줘요!'); return; }
+
+    const groups = document.querySelectorAll('.choice-group');
+    if (!groups.length) { alert('선택지를 하나 이상 추가해줘요!'); return; }
+
+    const inserts = [];
+    for (const g of groups) {
+      const idx = g.id.replace('cg-', '');
+      const text = document.getElementById('cg-text-' + idx)?.value.trim();
+      if (!text) continue;
+      inserts.push({
+        dialogue_id,
+        text,
+        next_scene_id: parseInt(document.getElementById('cg-next-' + idx)?.value) || null,
+        skill_effect: parseInt(document.getElementById('cg-skill-' + idx)?.value) || 0,
+        fame_effect: parseInt(document.getElementById('cg-fame-' + idx)?.value) || 0,
+        fan_effect: parseInt(document.getElementById('cg-fan-' + idx)?.value) || 0,
+        money_effect: parseInt(document.getElementById('cg-money-' + idx)?.value) || 0,
+        hp_effect: parseInt(document.getElementById('cg-hp-' + idx)?.value) || 0,
+      });
+    }
+
+    if (!inserts.length) { alert('선택지 텍스트를 입력해줘요!'); return; }
+    const { error } = await _supabase.from('choices').insert(inserts);
+    if (error) { alert('저장 실패 😢 ' + error.message); return; }
+
+    // 입력창 초기화
+    document.getElementById('choiceInputs').innerHTML = '';
+    choiceCount = 0;
+    addChoiceInput();
+    await loadAll();
+    alert('✅ 선택지 ' + inserts.length + '개 저장됐어요!');
+  }
+
   async function loadChoices() {
     const { data } = await _supabase.from('choices').select('*').order('dialogue_id');
     choices = data || [];
@@ -416,8 +532,9 @@
     const el = document.getElementById('choiceList');
     if (!choices.length) { el.innerHTML = '<div class="empty">선택지가 없어요</div>'; return; }
     el.innerHTML = choices.map(c => {
-      const dlg = dialogues.find(d => d.id === c.dialogue_id);
       const nextScene = scenes.find(s => s.id === c.next_scene_id);
+      const dlg = dialogues.find(d => d.id === c.dialogue_id);
+      const sceneName = dlg ? (scenes.find(s => s.id === dlg.scene_id)?.title || '?') : '?';
       const effects = [];
       if (c.skill_effect) effects.push(`🎤${c.skill_effect>0?'+':''}${c.skill_effect}`);
       if (c.fame_effect) effects.push(`🌟${c.fame_effect>0?'+':''}${c.fame_effect}`);
@@ -426,34 +543,57 @@
       if (c.hp_effect) effects.push(`❤️${c.hp_effect>0?'+':''}${c.hp_effect}`);
       return `
         <div class="list-item">
-          <div class="list-item-info">
-            <div class="list-item-title">"${c.text}"</div>
-            <div class="list-item-sub">대사ID: ${c.dialogue_id} · 다음씬: ${nextScene?.title || '없음'} · ${effects.join(' ')}</div>
+          <div class="list-item-top">
+            <div class="list-item-info">
+              <div class="list-item-title">"${c.text}"</div>
+              <div class="list-item-sub">씬: ${sceneName} · 다음: ${nextScene?.title||'없음'} · ${effects.join(' ')||'효과없음'}</div>
+            </div>
+            <div class="list-item-actions">
+              <button class="btn btn-orange btn-sm" onclick="toggleEditChoice(${c.id})">수정</button>
+              <button class="btn btn-red btn-sm" onclick="deleteChoice(${c.id})">삭제</button>
+            </div>
           </div>
-          <div class="list-item-actions">
-            <button class="btn btn-red btn-sm" onclick="deleteChoice(${c.id})">삭제</button>
+          <div class="edit-form" id="edit-ch-${c.id}">
+            <label>텍스트</label>
+            <input type="text" id="ec-text-${c.id}" value="${c.text}" />
+            <label>다음 씬</label>
+            <select id="ec-next-${c.id}">
+              <option value="">없음</option>
+              ${scenes.map(s=>`<option value="${s.id}" ${c.next_scene_id===s.id?'selected':''}>${s.title}</option>`).join('')}
+            </select>
+            <div class="stat-effects">
+              <div class="stat-row"><label>🎤</label><input type="number" id="ec-skill-${c.id}" value="${c.skill_effect||0}" /></div>
+              <div class="stat-row"><label>🌟</label><input type="number" id="ec-fame-${c.id}" value="${c.fame_effect||0}" /></div>
+              <div class="stat-row"><label>👥</label><input type="number" id="ec-fan-${c.id}" value="${c.fan_effect||0}" /></div>
+              <div class="stat-row"><label>💰</label><input type="number" id="ec-money-${c.id}" value="${c.money_effect||0}" /></div>
+              <div class="stat-row"><label>❤️</label><input type="number" id="ec-hp-${c.id}" value="${c.hp_effect||0}" /></div>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-green btn-sm" onclick="updateChoice(${c.id})">저장</button>
+              <button class="btn btn-sm" style="background:#eee;" onclick="toggleEditChoice(${c.id})">취소</button>
+            </div>
           </div>
         </div>`;
     }).join('');
   }
 
-  async function addChoice() {
-    const dialogue_id = parseInt(document.getElementById('ch-dialogue').value);
-    const text = document.getElementById('ch-text').value.trim();
-    const next_scene_id = parseInt(document.getElementById('ch-next-scene').value) || null;
-    const skill_effect = parseInt(document.getElementById('ch-skill').value) || 0;
-    const fame_effect = parseInt(document.getElementById('ch-fame').value) || 0;
-    const fan_effect = parseInt(document.getElementById('ch-fan').value) || 0;
-    const money_effect = parseInt(document.getElementById('ch-money').value) || 0;
-    const hp_effect = parseInt(document.getElementById('ch-hp').value) || 0;
-    if (!dialogue_id) { alert('대사를 선택해줘요!'); return; }
-    if (!text) { alert('선택지 텍스트를 입력해줘요!'); return; }
-    const { error } = await _supabase.from('choices').insert({
-      dialogue_id, text, next_scene_id,
-      skill_effect, fame_effect, fan_effect, money_effect, hp_effect
-    });
-    if (error) { alert('추가 실패 😢'); return; }
-    document.getElementById('ch-text').value = '';
+  function toggleEditChoice(id) {
+    document.getElementById('edit-ch-' + id).classList.toggle('open');
+  }
+
+  async function updateChoice(id) {
+    const text = document.getElementById('ec-text-' + id).value.trim();
+    const next_scene_id = parseInt(document.getElementById('ec-next-' + id).value) || null;
+    const skill_effect = parseInt(document.getElementById('ec-skill-' + id).value) || 0;
+    const fame_effect = parseInt(document.getElementById('ec-fame-' + id).value) || 0;
+    const fan_effect = parseInt(document.getElementById('ec-fan-' + id).value) || 0;
+    const money_effect = parseInt(document.getElementById('ec-money-' + id).value) || 0;
+    const hp_effect = parseInt(document.getElementById('ec-hp-' + id).value) || 0;
+    if (!text) { alert('텍스트를 입력해줘요!'); return; }
+    const { error } = await _supabase.from('choices').update({
+      text, next_scene_id, skill_effect, fame_effect, fan_effect, money_effect, hp_effect
+    }).eq('id', id);
+    if (error) { alert('수정 실패 😢'); return; }
     await loadAll();
   }
 
@@ -468,16 +608,13 @@
   // =====================
   function populateSelects() {
     const sceneOpts = scenes.map(s => `<option value="${s.id}">${s.title} (${s.stage})</option>`).join('');
-    const sceneOptsWithEmpty = '<option value="">없음</option>' + sceneOpts;
     const dlgOpts = dialogues.map(d => {
       const sName = scenes.find(s => s.id === d.scene_id)?.title || '?';
       return `<option value="${d.id}">[${sName}] ${d.text.slice(0,30)}</option>`;
     }).join('');
-
     document.getElementById('dl-scene').innerHTML = sceneOpts;
     document.getElementById('dl-filter').innerHTML = '<option value="">전체</option>' + sceneOpts;
     document.getElementById('ch-dialogue').innerHTML = dlgOpts;
-    document.getElementById('ch-next-scene').innerHTML = sceneOptsWithEmpty;
     document.getElementById('pv-scene').innerHTML = sceneOpts;
   }
 
@@ -490,30 +627,27 @@
     const scene = scenes.find(s => s.id === sceneId);
     const sceneDlgs = dialogues.filter(d => d.scene_id === sceneId).sort((a,b) => a.order - b.order);
     const el = document.getElementById('previewArea');
-
     el.innerHTML = `
-      <div style="position:relative;border-radius:12px;overflow:hidden;margin-bottom:12px;background:#333;height:200px;background-image:url(${scene.background_url||''});background-size:cover;background-position:center;">
-        ${scene.character_url ? `<img src="${scene.character_url}" style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);height:180px;object-fit:contain;">` : ''}
+      <div style="position:relative;border-radius:12px;overflow:hidden;margin-bottom:12px;background:#333;height:200px;
+        background-image:url(${scene.background_url||''});background-size:cover;background-position:center;">
+        ${scene.character_url?`<img src="${scene.character_url}" style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);height:180px;object-fit:contain;">`: ''}
       </div>
       <div style="background:#fffde7;border-radius:12px;padding:14px;border:2px solid #ffeb3b;">
-        <div style="font-size:11px;color:#888;margin-bottom:8px;">씬: ${scene.title} | 스테이지: ${scene.stage}</div>
+        <div style="font-size:11px;color:#888;margin-bottom:8px;">씬: ${scene.title} | ${scene.stage}</div>
         ${sceneDlgs.map(d => {
           const dlgChoices = choices.filter(c => c.dialogue_id === d.id);
           return `
             <div style="margin-bottom:10px;padding:8px;background:#fff;border-radius:8px;border:1px solid #eee;">
-              <div style="font-size:11px;color:#5a8a5a;font-weight:700;margin-bottom:4px;">${d.speaker || '나레이션'}</div>
+              <div style="font-size:11px;color:#5a8a5a;font-weight:700;margin-bottom:4px;">${d.speaker||'나레이션'}</div>
               <div style="font-size:13px;color:#333;">${d.text}</div>
-              ${dlgChoices.length ? `
+              ${dlgChoices.length?`
                 <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
-                  ${dlgChoices.map(c => `
-                    <div style="padding:4px 10px;background:#5a8a5a;color:#fff;border-radius:999px;font-size:11px;">${c.text}</div>
-                  `).join('')}
-                </div>` : ''}
+                  ${dlgChoices.map(c=>`<div style="padding:4px 12px;background:#5a8a5a;color:#fff;border-radius:999px;font-size:11px;">${c.text}</div>`).join('')}
+                </div>`:''}
             </div>`;
         }).join('')}
-        ${!sceneDlgs.length ? '<div class="empty">이 씬에 대사가 없어요</div>' : ''}
-      </div>
-    `;
+        ${!sceneDlgs.length?'<div class="empty">이 씬에 대사가 없어요</div>':''}
+      </div>`;
   }
 </script>
 </body>
