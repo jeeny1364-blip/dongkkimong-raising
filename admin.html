@@ -85,15 +85,7 @@
     .preview-name-row label{margin:0;font-size:13px;color:#888;white-space:nowrap;flex-shrink:0;}
     .preview-name-row input{margin:0;padding:8px 12px;font-size:14px;border-radius:10px;border:2px solid #eee;background:#fff;flex:1;}
 
-    /* 드래그 핸들 */
-    .drag-handle{
-      cursor:grab;
-      font-size:18px;
-      color:#ccc;
-      padding:0 8px 0 0;
-      flex-shrink:0;
-      user-select:none;
-    }
+    .drag-handle{cursor:grab;font-size:18px;color:#ccc;padding:0 8px 0 0;flex-shrink:0;user-select:none;}
     .drag-handle:active{cursor:grabbing;}
     .sortable-ghost{opacity:0.4;background:#d0efd0 !important;}
     .sortable-chosen{box-shadow:0 4px 16px rgba(90,138,90,0.25);}
@@ -199,7 +191,7 @@
 
   <!-- 선택지 관리 -->
   <div class="tab-panel" id="tab-choices">
-    <div class="notice">💡 한 번에 여러 선택지를 추가할 수 있어요!</div>
+    <div class="notice">💡 한 번에 여러 선택지를 추가할 수 있어요! ⏭️ To Be Continued 선택 가능!</div>
     <div class="card">
       <div class="card-title">➕ 선택지 추가</div>
       <label>연결할 대사</label>
@@ -253,6 +245,20 @@
     if (!text) return text;
     const testName = document.getElementById('pv-test-name')?.value.trim() || '플레이어';
     return text.replace(/\{name\}/g, testName);
+  }
+
+  function getNextSceneLabel(next_scene_id) {
+    if (next_scene_id === -1) return '⏭️ To Be Continued';
+    if (!next_scene_id) return '없음 (게임 종료)';
+    return scenes.find(s => s.id === next_scene_id)?.title || '?';
+  }
+
+  function nextSceneOptions(selectedId) {
+    return `
+      <option value="" ${!selectedId ? 'selected' : ''}>없음 (게임 종료)</option>
+      <option value="-1" ${selectedId === -1 ? 'selected' : ''}>⏭️ To Be Continued</option>
+      ${scenes.map(s => `<option value="${s.id}" ${selectedId === s.id ? 'selected' : ''}>${s.title}</option>`).join('')}
+    `;
   }
 
   function statEffectHTML(prefix) {
@@ -337,7 +343,6 @@
     fileInput.value = '';
   }
 
-  // ── 씬 ──
   async function loadScenes() {
     const { data } = await _supabase.from('scenes').select('*').order('order');
     scenes = data || [];
@@ -425,7 +430,6 @@
     await loadAll();
   }
 
-  // ── 대사 ──
   async function loadDialogues() {
     const filterId = document.getElementById('dl-filter')?.value;
     let q = _supabase.from('dialogues').select('*').order('scene_id').order('order');
@@ -438,7 +442,6 @@
   function renderDialogues() {
     const el = document.getElementById('dialogueList');
     if (!dialogues.length) { el.innerHTML = '<div class="empty">대사가 없어요</div>'; return; }
-
     el.innerHTML = dialogues.map(d => {
       const sceneName = scenes.find(s => s.id === d.scene_id)?.title || '?';
       return `
@@ -467,7 +470,6 @@
         </div>`;
     }).join('');
 
-    // 드래그 초기화 - 씬 필터 선택된 경우에만 순서 저장
     if (dlgSortable) dlgSortable.destroy();
     const filterId = document.getElementById('dl-filter')?.value;
     if (filterId) {
@@ -479,9 +481,7 @@
         onEnd: async () => {
           const items = el.querySelectorAll('.list-item[data-id]');
           const updates = [];
-          items.forEach((item, idx) => {
-            updates.push({ id: parseInt(item.dataset.id), order: idx + 1 });
-          });
+          items.forEach((item, idx) => { updates.push({ id: parseInt(item.dataset.id), order: idx + 1 }); });
           for (const u of updates) {
             await _supabase.from('dialogues').update({ order: u.order }).eq('id', u.id);
           }
@@ -508,13 +508,11 @@
     const text = document.getElementById('dl-text').value.trim();
     if (!scene_id) { alert('씬을 선택해줘요!'); return; }
     if (!text) { alert('대사를 입력해줘요!'); return; }
-    // 해당 씬의 마지막 순서 + 1로 자동 세팅
     const sceneDialogues = dialogues.filter(d => d.scene_id === scene_id);
     const maxOrder = sceneDialogues.length ? Math.max(...sceneDialogues.map(d => d.order)) : 0;
     const { error } = await _supabase.from('dialogues').insert({ scene_id, speaker, text, order: maxOrder + 1 });
     if (error) { alert('추가 실패 😢'); return; }
     document.getElementById('dl-text').value = '';
-    // 추가 후 해당 씬으로 필터 자동 전환
     document.getElementById('dl-filter').value = scene_id;
     await loadDialogues();
     await loadAll();
@@ -527,7 +525,6 @@
     await loadAll();
   }
 
-  // ── 선택지 ──
   function renderChoiceInputs() {
     const container = document.getElementById('choiceInputs');
     if (!container) return;
@@ -537,8 +534,6 @@
   function addChoiceInput() {
     choiceCount++;
     const idx = choiceCount;
-    const sceneOpts = '<option value="">없음 (게임 종료)</option>' +
-      scenes.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
     const div = document.createElement('div');
     div.className = 'choice-group';
     div.id = 'cg-' + idx;
@@ -548,7 +543,7 @@
       <label>선택지 텍스트</label>
       <input type="text" id="cg-text-${idx}" placeholder="예) 연습할게!" />
       <label>다음 씬</label>
-      <select id="cg-next-${idx}">${sceneOpts}</select>
+      <select id="cg-next-${idx}">${nextSceneOptions(null)}</select>
       ${statEffectHTML('cg-s' + idx)}`;
     document.getElementById('choiceInputs').appendChild(div);
   }
@@ -569,9 +564,10 @@
       const text = document.getElementById('cg-text-' + idx)?.value.trim();
       if (!text) continue;
       const stats = getStatValues('cg-s' + idx);
+      const nextVal = document.getElementById('cg-next-' + idx)?.value;
       inserts.push({
         dialogue_id, text,
-        next_scene_id: parseInt(document.getElementById('cg-next-' + idx)?.value) || null,
+        next_scene_id: nextVal === '-1' ? -1 : (parseInt(nextVal) || null),
         ...stats
       });
     }
@@ -595,7 +591,6 @@
     const el = document.getElementById('choiceList');
     if (!choices.length) { el.innerHTML = '<div class="empty">선택지가 없어요</div>'; return; }
     el.innerHTML = choices.map(c => {
-      const nextScene = scenes.find(s => s.id === c.next_scene_id);
       const dlg = dialogues.find(d => d.id === c.dialogue_id);
       const sceneName = dlg ? (scenes.find(s => s.id === dlg.scene_id)?.title || '?') : '?';
       return `
@@ -603,7 +598,7 @@
           <div class="list-item-top">
             <div class="list-item-info">
               <div class="list-item-title">"${c.text}"</div>
-              <div class="list-item-sub">씬: ${sceneName}<br>다음: ${nextScene?.title||'없음'}<br>${formatEffects(c)}</div>
+              <div class="list-item-sub">씬: ${sceneName}<br>다음: ${getNextSceneLabel(c.next_scene_id)}<br>${formatEffects(c)}</div>
             </div>
             <div class="list-item-actions">
               <button class="btn btn-orange btn-sm" onclick="toggleEditChoice(${c.id})">수정</button>
@@ -614,10 +609,7 @@
             <label>텍스트</label>
             <input type="text" id="ec-text-${c.id}" value="${c.text}" />
             <label>다음 씬</label>
-            <select id="ec-next-${c.id}">
-              <option value="">없음</option>
-              ${scenes.map(s=>`<option value="${s.id}" ${c.next_scene_id===s.id?'selected':''}>${s.title}</option>`).join('')}
-            </select>
+            <select id="ec-next-${c.id}">${nextSceneOptions(c.next_scene_id)}</select>
             ${statEditHTML('ec-s' + c.id, c)}
             <div style="display:flex;gap:8px;">
               <button class="btn btn-green btn-sm" onclick="updateChoice(${c.id})">저장</button>
@@ -632,7 +624,8 @@
 
   async function updateChoice(id) {
     const text = document.getElementById('ec-text-' + id).value.trim();
-    const next_scene_id = parseInt(document.getElementById('ec-next-' + id).value) || null;
+    const nextVal = document.getElementById('ec-next-' + id).value;
+    const next_scene_id = nextVal === '-1' ? -1 : (parseInt(nextVal) || null);
     const stats = getStatValues('ec-s' + id);
     if (!text) { alert('텍스트를 입력해줘요!'); return; }
     const { error } = await _supabase.from('choices').update({ text, next_scene_id, ...stats }).eq('id', id);
@@ -683,7 +676,7 @@
                 <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
                   ${dlgChoices.map(c=>`
                     <div style="padding:8px 12px;background:#111;color:#fff;border-radius:10px;font-size:13px;">
-                      ${c.text}<br><span style="color:#aaa;font-size:11px;">${formatEffects(c)}</span>
+                      ${c.text}<br><span style="color:#aaa;font-size:11px;">${getNextSceneLabel(c.next_scene_id)} · ${formatEffects(c)}</span>
                     </div>`).join('')}
                 </div>`:'<div style="font-size:12px;color:#aaa;margin-top:6px;">▼ 탭으로 넘어감</div>'}
             </div>`;
