@@ -578,13 +578,21 @@
   }
 
   function showEnding() {
-    document.getElementById('endingTitle').textContent = stats.like >= 50 ? '💕 해피엔딩!' : '래퍼남친 똥끼몽';
-    document.getElementById('endingMsg').innerHTML =
-      `메이슨홈이 당신을 손절했어요...<br><br>` +
-      `❤️ 호감도: ${stats.like} · ⭐ 실력: ${stats.skill}<br>` +
-      `💰 ${stats.money.toLocaleString()}원`;
-    document.getElementById('endingScreen').classList.add('show');
-  }
+  document.getElementById('endingScreen').classList.add('show');
+  document.getElementById('endingScreen').querySelector('.result-box').innerHTML = `
+    <div style="font-size:48px;margin-bottom:16px;">🎤</div>
+    <div style="font-size:18px;font-weight:700;color:#333;margin-bottom:12px;">To Be Continued...</div>
+    <div style="font-size:13px;color:#888;line-height:1.8;margin-bottom:8px;">
+      일단 에필로그는 여기까지<br>
+      다음 에피소드 기다려주십쇼.
+    </div>
+    <div style="background:#f5f0e8;border-radius:12px;padding:12px;font-size:12px;color:#888;margin-bottom:20px;line-height:1.8;">
+      ❤️ 호감도: ${stats.like} · ⭐ 실력: ${stats.skill}<br>
+      💰 ${stats.money.toLocaleString()}원
+    </div>
+    <button class="result-btn" onclick="restartGame()">처음부터</button>
+  `;
+}
 
   init();
 </script>
