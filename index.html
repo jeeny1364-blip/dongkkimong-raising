@@ -26,7 +26,6 @@
       background:#111;
     }
 
-    /* 배경 */
     .scene-bg{
       position:absolute;
       inset:0;
@@ -47,22 +46,20 @@
       );
     }
 
-    /* 캐릭터 */
     .scene-char{
-  position:absolute;
-  bottom:240px;
-  left:50%;
-  transform:translateX(-50%);
-  height:50%;
-  max-height:360px;
-  width:auto;
-  max-width:90%;
-  object-fit:contain;
-  z-index:5;
-  transition:opacity 0.3s ease;
-}
+      position:absolute;
+      bottom:240px;
+      left:50%;
+      transform:translateX(-50%);
+      height:50%;
+      max-height:360px;
+      width:auto;
+      max-width:90%;
+      object-fit:contain;
+      z-index:5;
+      transition:opacity 0.3s ease;
+    }
 
-    /* 상단 스탯 카드 */
     .stat-cards{
       position:absolute;
       top:16px;
@@ -89,7 +86,6 @@
     }
     .stat-card.money{ flex:1.4; }
 
-    /* 대화창 영역 */
     .dialog-area{
       position:absolute;
       bottom:0;left:0;right:0;
@@ -98,7 +94,6 @@
       display:none;
     }
 
-    /* 플레이어 말풍선 */
     .player-bubble{
       display:none;
       justify-content:flex-end;
@@ -115,7 +110,6 @@
       box-shadow:0 2px 8px rgba(0,0,0,0.3);
     }
 
-    /* 캐릭터 대화창 */
     .char-dialog{
       background:rgba(245,245,240,0.95);
       border-radius:16px;
@@ -153,7 +147,6 @@
       50%{transform:translateY(3px);}
     }
 
-    /* 선택지 버튼 */
     .choices-wrap{
       display:flex;
       flex-direction:column;
@@ -180,7 +173,6 @@
     .choice-btn:hover{background:rgba(0,0,0,0.8);transform:translateY(-2px);}
     .choice-btn:active{transform:scale(0.97);}
 
-    /* 로딩 */
     .loading-screen{
       position:absolute;
       inset:0;
@@ -205,7 +197,6 @@
       50%{transform:translateY(-8px);opacity:1;}
     }
 
-    /* 온보딩 */
     .start-screen{
       position:absolute;
       inset:0;
@@ -255,7 +246,6 @@
     }
     .start-btn:hover{background:#eee;}
 
-    /* 스탯 토스트 - 정가운데 */
     .stat-toast{
       position:absolute;
       top:50%;
@@ -283,7 +273,6 @@
       100%{opacity:0;transform:translateY(-40px);}
     }
 
-    /* 결과 화면 */
     .result-screen{
       display:none;
       position:absolute;
@@ -328,13 +317,11 @@
 <body>
 <div class="game-wrap" id="gameWrap">
 
-  <!-- 로딩 -->
   <div class="loading-screen" id="loadingScreen">
     <div class="loading-title">🎤 래퍼남친 똥끼몽</div>
     <div class="loading-dot"><span></span><span></span><span></span></div>
   </div>
 
-  <!-- 온보딩 -->
   <div class="start-screen" id="startScreen">
     <div class="start-title">🎤 래퍼남친<br>똥끼몽</div>
     <div class="start-sub">래퍼여친이 되고싶은 나?!<br>까탈스러운 똥끼몽의 마음을 공... 략... 해봐!</div>
@@ -342,14 +329,11 @@
     <button class="start-btn" onclick="startGame()">▶ 시작하기</button>
   </div>
 
-  <!-- 배경 -->
   <div class="scene-bg" id="sceneBg"></div>
   <div class="scene-bg-overlay"></div>
 
-  <!-- 캐릭터 -->
   <img class="scene-char" id="sceneChar" src="" style="display:none;" />
 
-  <!-- 상단 스탯 카드 -->
   <div class="stat-cards" id="statCards" style="display:none;">
     <div class="stat-card">
       <span class="stat-card-icon">❤️</span>
@@ -365,10 +349,8 @@
     </div>
   </div>
 
-  <!-- 스탯 토스트 -->
   <div class="stat-toast" id="statToast"></div>
 
-  <!-- 대화창 -->
   <div class="dialog-area" id="dialogArea">
     <div class="player-bubble" id="playerBubble">
       <div class="player-bubble-inner" id="playerBubbleText"></div>
@@ -381,7 +363,6 @@
     <div class="choices-wrap" id="choicesWrap"></div>
   </div>
 
-  <!-- 게임오버 -->
   <div class="result-screen" id="gameoverScreen">
     <div class="result-box">
       <div class="result-emoji">💀</div>
@@ -391,7 +372,6 @@
     </div>
   </div>
 
-  <!-- 엔딩 -->
   <div class="result-screen" id="endingScreen">
     <div class="result-box">
       <div class="result-emoji">👑</div>
@@ -415,9 +395,6 @@
   let playerName = '당신';
   let stats = { like:0, skill:0, money:1000, hp:100 };
 
-  // ========================
-  // 초기화
-  // ========================
   async function init() {
     const [{ data: sc }, { data: dl }, { data: ch }] = await Promise.all([
       _supabase.from('scenes').select('*').order('order'),
@@ -431,9 +408,6 @@
     document.getElementById('startScreen').style.display = 'flex';
   }
 
-  // ========================
-  // 시작
-  // ========================
   function startGame() {
     playerName = document.getElementById('nicknameInput').value.trim() || '당신';
     document.getElementById('startScreen').style.display = 'none';
@@ -456,12 +430,18 @@
     if (allScenes.length) loadScene(allScenes[0].id);
   }
 
-  // ========================
-  // 씬 로드
-  // ========================
   function loadScene(sceneId) {
     currentScene = allScenes.find(s => s.id === sceneId);
     if (!currentScene) { showEnding(); return; }
+
+    // 이전 씬 완전 초기화
+    isTyping = false;
+    clearTimeout(typingTimeout);
+    document.getElementById('charText').innerHTML = '';
+    document.getElementById('charName').textContent = '';
+    document.getElementById('choicesWrap').innerHTML = '';
+    document.getElementById('nextIndicator').style.display = 'none';
+    document.getElementById('playerBubble').classList.remove('show');
 
     document.getElementById('sceneBg').style.backgroundImage =
       currentScene.background_url ? `url(${currentScene.background_url})` : 'linear-gradient(135deg,#111,#222)';
@@ -476,23 +456,22 @@
 
     currentDialogues = allDialogues.filter(d => d.scene_id === sceneId).sort((a,b) => a.order - b.order);
     currentDlgIdx = 0;
-    document.getElementById('playerBubble').classList.remove('show');
-    document.getElementById('choicesWrap').innerHTML = '';
-    document.getElementById('nextIndicator').style.display = 'none';
     if (currentDialogues.length) showDialogue(0);
   }
 
-  // ========================
-  // 대사
-  // ========================
   function showDialogue(idx) {
-    if (idx >= currentDialogues.length) return;
+    if (idx >= currentDialogues.length) {
+      showEnding();
+      return;
+    }
     currentDlgIdx = idx;
     const dlg = currentDialogues[idx];
     const dlgChoices = allChoices.filter(c => c.dialogue_id === dlg.id);
     const isLast = idx === currentDialogues.length - 1;
 
-    document.getElementById('charName').textContent = dlg.speaker ? dlg.speaker.replace(/\{name\}/g, playerName) : '나레이션';
+    document.getElementById('charName').textContent = dlg.speaker
+      ? dlg.speaker.replace(/\{name\}/g, playerName)
+      : '나레이션';
     document.getElementById('choicesWrap').innerHTML = '';
     document.getElementById('nextIndicator').style.display = 'none';
 
@@ -538,9 +517,6 @@
     showDialogue(currentDlgIdx + 1);
   }
 
-  // ========================
-  // 선택지
-  // ========================
   function showChoices(choices) {
     document.getElementById('choicesWrap').innerHTML = choices.map(c => `
       <button class="choice-btn" onclick="selectChoice(${c.id})">${c.text}</button>
@@ -572,9 +548,6 @@
     }, 800);
   }
 
-  // ========================
-  // 스탯
-  // ========================
   function applyStats(choice) {
     const effects = [];
     if (choice.fan_effect) { stats.like = Math.min(999, Math.max(0, stats.like + choice.fan_effect)); effects.push(`❤️${choice.fan_effect>0?'+':''}${choice.fan_effect}`); }
@@ -604,9 +577,6 @@
     });
   }
 
-  // ========================
-  // 엔딩
-  // ========================
   function showEnding() {
     document.getElementById('endingTitle').textContent = stats.like >= 50 ? '💕 해피엔딩!' : '래퍼남친 똥끼몽';
     document.getElementById('endingMsg').innerHTML =
