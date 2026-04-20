@@ -492,7 +492,7 @@
     const dlgChoices = allChoices.filter(c => c.dialogue_id === dlg.id);
     const isLast = idx === currentDialogues.length - 1;
 
-    document.getElementById('charName').textContent = dlg.speaker || '나레이션';
+    document.getElementById('charName').textContent = dlg.speaker ? dlg.speaker.replace(/\{name\}/g, playerName) : '나레이션';
     document.getElementById('choicesWrap').innerHTML = '';
     document.getElementById('nextIndicator').style.display = 'none';
 
