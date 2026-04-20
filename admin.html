@@ -5,6 +5,7 @@
   <title>똥끼몽 어드민</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
     body{background:#f5f0e8;font-family:'Jua',sans-serif;color:#333;padding:16px;font-size:16px;}
@@ -84,6 +85,19 @@
     .preview-name-row label{margin:0;font-size:13px;color:#888;white-space:nowrap;flex-shrink:0;}
     .preview-name-row input{margin:0;padding:8px 12px;font-size:14px;border-radius:10px;border:2px solid #eee;background:#fff;flex:1;}
 
+    /* 드래그 핸들 */
+    .drag-handle{
+      cursor:grab;
+      font-size:18px;
+      color:#ccc;
+      padding:0 8px 0 0;
+      flex-shrink:0;
+      user-select:none;
+    }
+    .drag-handle:active{cursor:grabbing;}
+    .sortable-ghost{opacity:0.4;background:#d0efd0 !important;}
+    .sortable-chosen{box-shadow:0 4px 16px rgba(90,138,90,0.25);}
+
     #previewArea img{max-width:100%;}
   </style>
 </head>
@@ -128,7 +142,6 @@
           <input type="number" id="sc-order" value="1" min="1" />
         </div>
       </div>
-
       <label>배경 이미지</label>
       <div class="img-toggle-row">
         <button class="btn btn-blue btn-sm" onclick="toggleImgInput('bg','url')">🔗 URL</button>
@@ -140,7 +153,6 @@
         <button class="btn btn-blue btn-sm" onclick="uploadImg('bg')">업로드</button>
         <span id="bg-upload-status" style="font-size:12px;color:#888;margin-left:6px;"></span>
       </div>
-
       <label>캐릭터 이미지</label>
       <div class="img-toggle-row">
         <button class="btn btn-blue btn-sm" onclick="toggleImgInput('char','url')">🔗 URL</button>
@@ -152,7 +164,6 @@
         <button class="btn btn-blue btn-sm" onclick="uploadImg('char')">업로드</button>
         <span id="char-upload-status" style="font-size:12px;color:#888;margin-left:6px;"></span>
       </div>
-
       <button class="btn btn-green btn-full" onclick="addScene()">씬 추가하기</button>
     </div>
     <div class="card">
@@ -163,7 +174,7 @@
 
   <!-- 대사 관리 -->
   <div class="tab-panel" id="tab-dialogues">
-    <div class="notice">💡 선택지 없는 대사는 ▼ 탭으로 넘어가요. {name} 쓰면 플레이어 이름으로 교체돼요! (대사 내용, 화자 이름 둘 다 사용 가능)</div>
+    <div class="notice">💡 ☰ 드래그로 순서 변경! {name} 쓰면 플레이어 이름으로 교체돼요!</div>
     <div class="card">
       <div class="card-title">➕ 새 대사 추가</div>
       <label>씬 선택</label>
@@ -173,10 +184,6 @@
           <label>화자 이름 ({name} 사용 가능)</label>
           <input type="text" id="dl-speaker" placeholder="예) {name}, 메이슨홈" />
         </div>
-        <div>
-          <label>순서</label>
-          <input type="number" id="dl-order" value="1" min="1" />
-        </div>
       </div>
       <label>대사 내용</label>
       <textarea id="dl-text" placeholder="예) {name}아, 나 래퍼 될 것 같아."></textarea>
@@ -184,7 +191,7 @@
     </div>
     <div class="card">
       <div class="card-title">📋 대사 목록</div>
-      <label>씬 필터</label>
+      <label>씬 필터 (드래그 순서 저장은 씬을 선택한 상태에서만 가능해요)</label>
       <select id="dl-filter" onchange="loadDialogues()"><option value="">전체</option></select>
       <div id="dialogueList"><div class="empty">대사가 없어요</div></div>
     </div>
@@ -211,12 +218,10 @@
   <div class="tab-panel" id="tab-preview">
     <div class="card">
       <div class="card-title">👀 씬 미리보기</div>
-
       <div class="preview-name-row">
         <label>🙋 테스트 이름</label>
         <input type="text" id="pv-test-name" placeholder="플레이어 이름 입력..." oninput="loadPreview()" />
       </div>
-
       <label>씬 선택</label>
       <select id="pv-scene" onchange="loadPreview()"></select>
       <div id="previewArea"></div>
@@ -235,6 +240,7 @@
   const BUCKET = 'dongkki';
   let scenes = [], dialogues = [], choices = [];
   let choiceCount = 0;
+  let dlgSortable = null;
 
   const STATS = [
     { key:'fan',   icon:'❤️', label:'호감도', field:'fan_effect' },
@@ -243,7 +249,6 @@
     { key:'hp',    icon:'🩹', label:'체력',   field:'hp_effect' },
   ];
 
-  // {name} 치환 헬퍼 - 미리보기에서만 사용
   function replaceName(text) {
     if (!text) return text;
     const testName = document.getElementById('pv-test-name')?.value.trim() || '플레이어';
@@ -332,6 +337,7 @@
     fileInput.value = '';
   }
 
+  // ── 씬 ──
   async function loadScenes() {
     const { data } = await _supabase.from('scenes').select('*').order('order');
     scenes = data || [];
@@ -419,6 +425,7 @@
     await loadAll();
   }
 
+  // ── 대사 ──
   async function loadDialogues() {
     const filterId = document.getElementById('dl-filter')?.value;
     let q = _supabase.from('dialogues').select('*').order('scene_id').order('order');
@@ -431,11 +438,13 @@
   function renderDialogues() {
     const el = document.getElementById('dialogueList');
     if (!dialogues.length) { el.innerHTML = '<div class="empty">대사가 없어요</div>'; return; }
+
     el.innerHTML = dialogues.map(d => {
       const sceneName = scenes.find(s => s.id === d.scene_id)?.title || '?';
       return `
-        <div class="list-item">
+        <div class="list-item" data-id="${d.id}">
           <div class="list-item-top">
+            <span class="drag-handle">☰</span>
             <div class="list-item-info">
               <div class="list-item-title">[${d.speaker||'나레이션'}]</div>
               <div class="list-item-sub">${d.text.slice(0,50)}${d.text.length>50?'...':''}<br>씬: ${sceneName} · 순서: ${d.order}</div>
@@ -448,8 +457,6 @@
           <div class="edit-form" id="edit-dlg-${d.id}">
             <label>화자 ({name} 사용 가능)</label>
             <input type="text" id="ed-speaker-${d.id}" value="${d.speaker||''}" placeholder="예) {name}, 메이슨홈" />
-            <label>순서</label>
-            <input type="number" id="ed-order-${d.id}" value="${d.order}" />
             <label>대사</label>
             <textarea id="ed-text-${d.id}">${d.text}</textarea>
             <div style="display:flex;gap:8px;">
@@ -459,16 +466,38 @@
           </div>
         </div>`;
     }).join('');
+
+    // 드래그 초기화 - 씬 필터 선택된 경우에만 순서 저장
+    if (dlgSortable) dlgSortable.destroy();
+    const filterId = document.getElementById('dl-filter')?.value;
+    if (filterId) {
+      dlgSortable = Sortable.create(el, {
+        handle: '.drag-handle',
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        onEnd: async () => {
+          const items = el.querySelectorAll('.list-item[data-id]');
+          const updates = [];
+          items.forEach((item, idx) => {
+            updates.push({ id: parseInt(item.dataset.id), order: idx + 1 });
+          });
+          for (const u of updates) {
+            await _supabase.from('dialogues').update({ order: u.order }).eq('id', u.id);
+          }
+          await loadDialogues();
+        }
+      });
+    }
   }
 
   function toggleEditDialogue(id) { document.getElementById('edit-dlg-' + id).classList.toggle('open'); }
 
   async function updateDialogue(id) {
     const speaker = document.getElementById('ed-speaker-' + id).value.trim();
-    const order = parseInt(document.getElementById('ed-order-' + id).value) || 1;
     const text = document.getElementById('ed-text-' + id).value.trim();
     if (!text) { alert('대사를 입력해줘요!'); return; }
-    const { error } = await _supabase.from('dialogues').update({ speaker, order, text }).eq('id', id);
+    const { error } = await _supabase.from('dialogues').update({ speaker, text }).eq('id', id);
     if (error) { alert('수정 실패 😢'); return; }
     await loadAll();
   }
@@ -477,12 +506,17 @@
     const scene_id = parseInt(document.getElementById('dl-scene').value);
     const speaker = document.getElementById('dl-speaker').value.trim();
     const text = document.getElementById('dl-text').value.trim();
-    const order = parseInt(document.getElementById('dl-order').value) || 1;
     if (!scene_id) { alert('씬을 선택해줘요!'); return; }
     if (!text) { alert('대사를 입력해줘요!'); return; }
-    const { error } = await _supabase.from('dialogues').insert({ scene_id, speaker, text, order });
+    // 해당 씬의 마지막 순서 + 1로 자동 세팅
+    const sceneDialogues = dialogues.filter(d => d.scene_id === scene_id);
+    const maxOrder = sceneDialogues.length ? Math.max(...sceneDialogues.map(d => d.order)) : 0;
+    const { error } = await _supabase.from('dialogues').insert({ scene_id, speaker, text, order: maxOrder + 1 });
     if (error) { alert('추가 실패 😢'); return; }
     document.getElementById('dl-text').value = '';
+    // 추가 후 해당 씬으로 필터 자동 전환
+    document.getElementById('dl-filter').value = scene_id;
+    await loadDialogues();
     await loadAll();
     alert('✅ 대사가 추가됐어요!');
   }
@@ -493,6 +527,7 @@
     await loadAll();
   }
 
+  // ── 선택지 ──
   function renderChoiceInputs() {
     const container = document.getElementById('choiceInputs');
     if (!container) return;
